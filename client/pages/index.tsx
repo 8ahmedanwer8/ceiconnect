@@ -7,13 +7,35 @@ const inter = Inter({ subsets: ["latin"] });
 
 import Rooms from "../components/Rooms";
 import Messages from "../components/Messages";
+import { useRef } from "react";
 
 export default function Home() {
-  const { socket } = useSockets();
+  const { socket, username, setUsername } = useSockets();
+  const usernameRef = useRef(null);
+
+  function handleSetUsername() {
+    const value = usernameRef.current.value;
+    if (!value) {
+      return;
+    }
+    setUsername(value);
+    localStorage.setItem("username", value);
+  }
+
   return (
     <div>
-      <Rooms></Rooms>
-      <Messages></Messages>
+      {!username && ( //ignoring classnames for divs bc i dont wanna style much
+        <div>
+          <input placeholder="Username" ref={usernameRef} />
+          <button onClick={handleSetUsername}>START</button>
+        </div>
+      )}
+      {username && (
+        <div>
+          <Rooms></Rooms>
+          <Messages></Messages>
+        </div>
+      )}
     </div>
   );
 }

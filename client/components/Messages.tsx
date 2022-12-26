@@ -1,4 +1,6 @@
-function MessagesContainer() {
+import 
+
+function Messages() {
   return <p>Messages</p>;
 }
-export default MessagesContainer;
+export default Messages;
