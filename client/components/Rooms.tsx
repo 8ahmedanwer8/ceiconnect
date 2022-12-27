@@ -18,6 +18,13 @@ function Rooms() {
     //set room name input to empty string
     newRoomRef.current.value = "";
   }
+
+  function handleJoinRoom(key: String) {
+    if (key == roomId) return;
+
+    socket.emit(EVENTS.CLIENT.JOIN_ROOM, key);
+  }
+
   return (
     <nav>
       <div>
@@ -27,7 +34,13 @@ function Rooms() {
       {Object.keys(rooms).map((key) => {
         return (
           <div key={key}>
-            {key} {rooms[key].name}
+            <button
+              disabled={key === roomId}
+              title={`Join ${rooms[key].name}`}
+              onClick={() => handleJoinRoom(key)}
+            >
+              {key} {rooms[key].name}
+            </button>
           </div>
         );
       })}
