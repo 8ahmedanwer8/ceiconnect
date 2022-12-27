@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useEffect, useContext, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import { SOCKET_URL } from "../config/default";
 import EVENTS from "../config/events";
@@ -35,9 +35,16 @@ function SocketsProvider(props: any) {
     setMessages([]);
   });
 
-  socket.on(EVENTS.SERVER.ROOM_MESSAGE, ({ message, username, time }) => {
-    setMessages([...messages], message, username, time);
-  });
+  useEffect(() => {
+    socket.on(EVENTS.SERVER.ROOM_MESSAGE, ({ message, username, time }) => {
+      if (!document.hasFocus()) {
+        document.title = "New message";
+      }
+
+      setMessages((messages) => [...messages, { message, username, time }]);
+    });
+  }, [socket]);
+
   return (
     <SocketsContext.Provider
       value={{

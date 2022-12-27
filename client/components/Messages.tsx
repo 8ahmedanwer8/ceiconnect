@@ -14,6 +14,7 @@ function Messages() {
     socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, { roomId, message, username });
 
     const date = new Date();
+    console.log(messages);
 
     //apparently here we are doing a "lite" version of how messaging is probably
     //supposed to be done. like, i think you're supposed to broadcast an event or
@@ -24,7 +25,7 @@ function Messages() {
       {
         username: "You",
         message,
-        time: `${date.getHours()}:${date.getMinutes}`,
+        time: `${date.getHours()}:${date.getMinutes()}`,
       },
     ]);
   }
@@ -45,7 +46,7 @@ function Messages() {
           placeholder="tell us what u are thinking"
           ref={newMessageRef}
         />
-        <button onClick={handleSendMessage}>SEND</button>
+        <button onClick={handleSendMessage}>SEND </button>
       </div>
     </div>
   );
