@@ -1,6 +1,7 @@
 import { useSockets } from "../context/sockets.context";
 import { useRef } from "react";
 import EVENTS from "../config/events";
+import { formatAMPM } from "../utils/helpers";
 
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();
@@ -14,7 +15,6 @@ function Messages() {
     socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, { roomId, message, username });
 
     const date = new Date();
-    console.log(messages);
 
     //apparently here we are doing a "lite" version of how messaging is probably
     //supposed to be done. like, i think you're supposed to broadcast an event or
@@ -25,9 +25,10 @@ function Messages() {
       {
         username: "You",
         message,
-        time: `${date.getHours()}:${date.getMinutes()}`,
+        time: `${formatAMPM(date)}`,
       },
     ]);
+    newMessageRef.current.value = "";
   }
 
   if (!roomId) {
@@ -36,8 +37,12 @@ function Messages() {
 
   return (
     <div>
-      {messages.map(({ message }, index) => {
-        return <p key={index}>{message}</p>;
+      {messages.map(({ message, username, time }, index) => {
+        return (
+          <p key={index}>
+            {time} {username} {message}
+          </p>
+        );
       })}
 
       <div>
