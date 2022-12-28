@@ -16,6 +16,7 @@ const app = express();
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
+  maxHttpBufferSize: 1e8,
   cors: {
     origin: corsOrigin,
     credentials: true,

@@ -28,6 +28,12 @@ function SocketsProvider(props: any) {
   const [rooms, setRooms] = useState({});
   const [messages, setMessages] = useState([]);
 
+  useEffect(() => {
+    window.onfocus = function () {
+      document.title = "YOUR APP NAMMEEE";
+    };
+  }, []);
+
   socket.on(EVENTS.SERVER.ROOMS, (value) => setRooms(value));
 
   socket.on(EVENTS.SERVER.JOINED_ROOM, (value) => {

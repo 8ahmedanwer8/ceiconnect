@@ -1,11 +1,12 @@
 import { useSockets } from "../context/sockets.context";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import EVENTS from "../config/events";
 import { formatAMPM } from "../utils/helpers";
 
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();
   const newMessageRef = useRef(null);
+  const messageEndRef = useRef(null);
 
   function handleSendMessage() {
     const message = newMessageRef.current.value;
@@ -31,6 +32,11 @@ function Messages() {
     newMessageRef.current.value = "";
   }
 
+  useEffect(() => {
+    //when new message comes, it scrolls smoothly to it
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   if (!roomId) {
     return <div />;
   }
@@ -44,6 +50,7 @@ function Messages() {
           </p>
         );
       })}
+      <div ref={messageEndRef}></div>
 
       <div>
         <textarea
