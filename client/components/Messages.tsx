@@ -5,6 +5,7 @@ import { formatAMPM } from "../utils/helpers";
 
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();
+  const usernameString = username.current; //crappy solution to the problem where i wanna make randomgen username part of the context but i need to use useRef bc using useState and initialzing it causes nextjs to render two different versions of the username during the prerender and the real render since it is a random username each time. so i use a useRef instead to avoid having to use useState. i also cant just intitialize useState inside of useEffect cuz that will be infinite loop i think
   const newMessageRef = useRef(null);
   const messageEndRef = useRef(null);
 
@@ -13,7 +14,12 @@ function Messages() {
     if (!String(message).trim()) {
       return;
     }
-    socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, { roomId, message, username });
+    console.log("this is the messag we arer sendidng", usernameString);
+    socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, {
+      roomId,
+      message,
+      usernameString,
+    });
 
     const date = new Date();
 

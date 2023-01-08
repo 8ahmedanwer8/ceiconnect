@@ -1,3 +1,6 @@
+import ADJECTIVES from "./random_username_components/adjectives";
+import ANIMALS from "./random_username_components/animals";
+
 export const formatAMPM = (date) => {
   var hours = date.getHours();
   var minutes = date.getMinutes();
@@ -7,4 +10,15 @@ export const formatAMPM = (date) => {
   minutes = minutes < 10 ? "0" + minutes : minutes;
   var strTime = hours + ":" + minutes + " " + ampm;
   return strTime;
+};
+
+export const generateRandomUsername = () => {
+  var animal =
+    ANIMALS.animals[Math.floor(Math.random() * ANIMALS.animals.length)];
+  var adjective =
+    ADJECTIVES.adjectives[
+      Math.floor(Math.random() * ADJECTIVES.adjectives.length)
+    ];
+  var number = Math.floor(Math.random() * 1000);
+  return `${adjective}${animal}${number}`;
 };
