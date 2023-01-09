@@ -18,6 +18,8 @@ const EVENTS = {
     JOINED_ROOM: "JOINED_ROOM",
     ROOM_MESSAGE: "ROOM_MESSAGE",
     JOINED_WAITING_ROOM: "JOINED_WAITING_ROOM",
+    CONNECTEDWITHYOU: "CONNECTEDWITHYOU",
+
     CONNECTED: "CONNECTED",
   },
 };
@@ -148,12 +150,11 @@ function socket({ io }: { io: Server }) {
     socket.on(
       EVENTS.CLIENT.SEND_ROOM_MESSAGE,
       ({ roomId, message, usernameString }) => {
-        console.log("the user name is", usernameString);
         const date = new Date();
 
         socket.to(roomId).emit(EVENTS.SERVER.ROOM_MESSAGE, {
           message,
-          username: JSON.stringify(usernameString),
+          username: usernameString,
           time: `${formatAMPM(date)}`,
         });
       }

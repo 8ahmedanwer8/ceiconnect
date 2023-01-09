@@ -3,8 +3,8 @@ export const formatAMPM = (date: Date) => {
   var minutes = date.getMinutes();
   var ampm = hours >= 12 ? "pm" : "am";
   hours = hours % 12;
-  hours = hours ? hours : 12; // the hour '0' should be '12'
-  minutes = minutes < 10 ? 0 + minutes : minutes;
+  hours = hours ? hours : 12;
+  minutes = Number(minutes.toString().padStart(2, "0")); //typescript is great ahhahha
   var strTime = hours + ":" + minutes + " " + ampm;
   return strTime;
 };

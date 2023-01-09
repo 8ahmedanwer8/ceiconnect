@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 
 export default function Find() {
   const { socket, rooms, username, roomId } = useSockets();
-
+  const [loadingText, setLoadingText] = useState("I am loading text");
   const [loading, setLoading] = useState(false);
   function findSomeone() {
     setLoading(true);
@@ -23,30 +23,33 @@ export default function Find() {
     });
 
     socket.on(EVENTS.SERVER.JOINED_WAITING_ROOM, (otherWaitingUsers) => {
-      console.log("Connected to servers"); //text shown in loading modal
-      console.log(`Found ${otherWaitingUsers.length} online`);
+      setLoadingText(`Found ${otherWaitingUsers.length} online`);
+
       if (otherWaitingUsers.length <= 1) {
         //theres nobody else besides this user on the app
         //add retry and waiting logic
-
-        console.log("Waiting for someone");
-        socket.on("CONNECTEDWITHYOU", (roomkey) => {
-          console.log("someone found meeee");
-        });
+        setLoadingText("Looking for someone");
 
         // const interval = setInterval(() => {
-        //   console.log("Waiting for someone");
+        //   setLoadingText("Looking for someone");
 
-        //   // socket.on(EVENTS.SERVER.JOINED_ROOM, () => {
-        //   //   console.log("found someone and joined them");
-        //   // });
-        // }, 3000);
+        socket.on(EVENTS.SERVER.CONNECTEDWITHYOU, (roomkey) => {
+          setLoadingText("Found someone!");
+          setLoadingText("Joining room");
+
+          //go to chat page
+        });
+        // }, 5000);
 
         // return () => clearInterval(interval);
       } else {
-        console.log("Connecting with someone");
+        setLoadingText("Found someone!");
         socket.emit(EVENTS.CLIENT.CONNECT_ME, username);
+        setLoadingText("Trying to connect with them");
         socket.on(EVENTS.SERVER.CONNECTED, (rooms) => {
+          setLoadingText("Joining room");
+
+          //go to chat page
           console.log(roomId);
           console.log("THESE are the new rooms");
           console.log(rooms);
@@ -59,12 +62,15 @@ export default function Find() {
     // const nickname = generateRandomUsername();
     // username.current = nickname;
     // console.log(username);
+    setLoadingText("Connected to Servers");
+
     findSomeone();
   }, [username]);
 
   return (
     <div>
       <p>Your user name is {JSON.stringify(username)}</p>
+      <p>{loadingText}</p>
       some loading screen
       <div>rooms</div>
       <p> {JSON.stringify(rooms)}</p>

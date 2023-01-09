@@ -30,7 +30,7 @@ function Messages() {
     setMessages([
       ...messages,
       {
-        username: "You",
+        username: `You (${usernameString})`,
         message,
         time: `${formatAMPM(date)}`,
       },
