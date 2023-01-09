@@ -4,6 +4,7 @@ import { useSockets } from "../context/sockets.context";
 const inter = Inter({ subsets: ["latin"] });
 import EVENTS from "../config/events";
 import Messages from "../components/Messages";
+import Router from "next/router";
 
 import { useState, useEffect } from "react";
 
@@ -38,6 +39,7 @@ export default function Find() {
           setLoadingText("Joining room");
 
           //go to chat page
+          Router.push("/chat");
         });
         // }, 5000);
 
@@ -50,6 +52,7 @@ export default function Find() {
           setLoadingText("Joining room");
 
           //go to chat page
+          Router.push("/chat");
           console.log(roomId);
           console.log("THESE are the new rooms");
           console.log(rooms);

@@ -14,7 +14,6 @@ function Messages() {
     if (!String(message).trim()) {
       return;
     }
-    console.log("this is the messag we arer sendidng", usernameString);
     socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, {
       roomId,
       message,
