@@ -7,6 +7,7 @@ import { generateRandomUsername } from "../utils/helpers";
 interface Context {
   socket: Socket;
   roomId?: string;
+  otherUsername?: object; //name of the person user is talking to
   username?: object;
   rooms: object;
   messages?: { message: string; time: string; username: string }[];
@@ -23,6 +24,7 @@ const SocketsContext = createContext<Context>({
 
 function SocketsProvider(props: any) {
   const username = useRef(null);
+  const otherUsername = useRef(null);
 
   const [roomId, setRoomId] = useState("");
   const [rooms, setRooms] = useState({});
@@ -31,7 +33,7 @@ function SocketsProvider(props: any) {
   useEffect(() => {
     username.current = generateRandomUsername();
     window.onfocus = function () {
-      document.title = "YOUR APP NAMMEEE";
+      document.title = "CeiConnect";
     };
   }, []);
 
@@ -47,9 +49,14 @@ function SocketsProvider(props: any) {
       if (!document.hasFocus()) {
         document.title = "New message";
       }
-      console.log(message, username, time, "whatifjk");
 
       setMessages((messages) => [...messages, { message, username, time }]);
+    });
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on(EVENTS.SERVER.OTHER_USERNAME, (value) => {
+      otherUsername.current = value;
     });
   }, [socket]);
 
@@ -59,6 +66,7 @@ function SocketsProvider(props: any) {
         socket,
         rooms,
         username,
+        otherUsername,
         roomId,
         messages,
         setMessages,

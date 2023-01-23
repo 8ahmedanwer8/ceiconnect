@@ -63,7 +63,7 @@ function Messages() {
           placeholder="tell us what u are thinking"
           ref={newMessageRef}
         />
-        <button onClick={handleSendMessage}>SEND </button>
+        <button onClick={handleSendMessage}>SEND</button>
       </div>
     </div>
   );

@@ -36,10 +36,14 @@ export default function Find() {
 
         socket.on(EVENTS.SERVER.CONNECTEDWITHYOU, (roomkey) => {
           setLoadingText("Found someone!");
+
           setLoadingText("Joining room");
 
           //go to chat page
-          Router.push("/chat");
+          Router.push({
+            pathname: "/chat",
+            query: { roomId: `${roomkey}` },
+          });
         });
         // }, 5000);
 
@@ -48,14 +52,14 @@ export default function Find() {
         setLoadingText("Found someone!");
         socket.emit(EVENTS.CLIENT.CONNECT_ME, username);
         setLoadingText("Trying to connect with them");
-        socket.on(EVENTS.SERVER.CONNECTED, (rooms) => {
+        socket.on(EVENTS.SERVER.CONNECTED, (roomkey) => {
           setLoadingText("Joining room");
 
           //go to chat page
-          Router.push("/chat");
-          console.log(roomId);
-          console.log("THESE are the new rooms");
-          console.log(rooms);
+          Router.push({
+            pathname: "/chat",
+            query: { roomId: `${roomkey}` },
+          });
         });
       }
     });
@@ -77,7 +81,6 @@ export default function Find() {
       some loading screen
       <div>rooms</div>
       <p> {JSON.stringify(rooms)}</p>
-      <Messages></Messages>
     </div>
   );
 }

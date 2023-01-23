@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { Server, Socket } from "socket.io";
 import logger from "./utils/logger";
 import { formatAMPM } from "./utils/helpers";
+import { SocketAddress } from "net";
 const EVENTS = {
   connection: "connection",
   CLIENT: {
@@ -12,6 +13,7 @@ const EVENTS = {
     NEW_WAITING: "NEW_WAITING",
     WAITING_ROOM_MEMBERS: "WAITING_ROOM_MEMBERS",
     CONNECT_ME: "CONNECT_ME",
+    MY_USERNAME: "MY_USERNAME",
   },
   SERVER: {
     ROOMS: "ROOMS",
@@ -19,8 +21,8 @@ const EVENTS = {
     ROOM_MESSAGE: "ROOM_MESSAGE",
     JOINED_WAITING_ROOM: "JOINED_WAITING_ROOM",
     CONNECTEDWITHYOU: "CONNECTEDWITHYOU",
-
     CONNECTED: "CONNECTED",
+    OTHER_USERNAME: "OTHER_USERNAME",
   },
 };
 
@@ -30,13 +32,8 @@ function socket({ io }: { io: Server }) {
   logger.info(`Sockets enabled`);
   const waitingRoomId = nanoid();
 
-  const getWaitingUsers = async (io: Server) => {
-    const waitingUsers = await io.in(waitingRoomId).fetchSockets();
-    return waitingUsers;
-  };
-
-  const getSockets = async (io: Server) => {
-    const sockets = await io.in(waitingRoomId).fetchSockets();
+  const getSockets = async (io: Server, id: string) => {
+    const sockets = await io.in(id).fetchSockets();
     return sockets;
   };
 
@@ -53,7 +50,7 @@ function socket({ io }: { io: Server }) {
       socket.join(waitingRoomId);
 
       try {
-        const clientsInRoom = getWaitingUsers(io);
+        const clientsInRoom = getSockets(io, waitingRoomId);
         clientsInRoom.then((client) => {
           //how many clients/users can i have in the wainting room? i need to support 15k
           // Do something with the resolved value
@@ -71,12 +68,9 @@ function socket({ io }: { io: Server }) {
     });
 
     socket.on(EVENTS.CLIENT.CONNECT_ME, (username) => {
-      console.log("the nickname");
-      console.log(username);
-      //take client user id
-      //find other clients in the waiting room again
+      //when a user is in the waiting room waiting to be paired up
       const currentSocketId = socket.id;
-      const sockets = getSockets(io);
+      const sockets = getSockets(io, waitingRoomId);
       sockets.then((socketList) => {
         const newChatRoomId = nanoid();
         const otherSocket = socketList.find(
@@ -92,34 +86,43 @@ function socket({ io }: { io: Server }) {
           rooms[currentSocketId] = {
             name: username,
           };
-          const clients = getWaitingUsers(io);
-          clients.then((client) => {
-            const waitingUsers = client.map(({ id }) => id);
-            console.log("now we have this");
-
-            console.log(waitingUsers);
-          });
-
-          socket.to(otherSocket.id).emit("CONNECTEDWITHYOU", newChatRoomId);
 
           socket.broadcast.emit(EVENTS.SERVER.ROOMS, rooms);
 
           socket
             .to(otherSocket.id)
+            .emit(EVENTS.SERVER.CONNECTEDWITHYOU, newChatRoomId);
+
+          socket
+            .to(otherSocket.id)
             .emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
+
           socket
             .to(otherSocket.id)
             .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
 
           socket.emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
-          socket.emit(EVENTS.SERVER.CONNECTED, rooms);
+          socket.emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
         }
       });
-      //create a room
-      //make client join that room, make other user join that room
-      //room both users from waiting room
+    });
 
-      //user enter a room
+    socket.on(EVENTS.CLIENT.MY_USERNAME, (data) => {
+      const roomId = data.roomId;
+      const username = data.username;
+      const clients = getSockets(io, roomId);
+      clients.then((clients) => {
+        //clients as in the two users/roomates that are in the chat together
+        const waitingUsers = clients.map(({ id }) => id);
+        const otherSocket = clients.find((obj) => obj.id !== socket.id);
+        if (otherSocket) {
+          socket
+            .to(otherSocket.id)
+            .emit(EVENTS.SERVER.OTHER_USERNAME, username);
+        } else {
+          //maybe put throw some error here
+        }
+      });
     });
 
     //when a user creates a new room
