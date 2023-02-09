@@ -1,2 +1,2 @@
 # ceiconnect
-chat apppfpp
+chat app
