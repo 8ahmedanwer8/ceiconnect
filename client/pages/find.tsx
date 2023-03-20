@@ -5,6 +5,7 @@ const inter = Inter({ subsets: ["latin"] });
 import EVENTS from "../config/events";
 import Messages from "../components/Messages";
 import Router from "next/router";
+import { Box, Text, Heading } from "@chakra-ui/react";
 
 import { useState, useEffect } from "react";
 
@@ -75,12 +76,22 @@ export default function Find() {
   }, [username]);
 
   return (
-    <div>
-      <p>Your user name is {JSON.stringify(username)}</p>
-      <p>{loadingText}</p>
-      some loading screen
-      <div>rooms</div>
-      <p> {JSON.stringify(rooms)}</p>
-    </div>
+    <Box w="full" h="full" bgColor="#171A21">
+      <Box h="fit-content" maxW="100%" bgColor="#0A1A3C" p="1em">
+        <Heading color="#F0F443" fontSize="4xl">
+          CeiConnect
+        </Heading>
+      </Box>
+      <div>
+        <p>Your user name is {JSON.stringify(username)}</p>
+        <p>{loadingText}</p>
+        some loading screen
+        <div>rooms</div>
+        <p> {JSON.stringify(rooms)}</p>
+      </div>
+      <Box>{roomId}</Box>
+      <Text>You are chatting with {username.current}</Text>
+      {/* <Messages></Messages> */}
+    </Box>
   );
 }
