@@ -64,6 +64,7 @@ function Messages() {
           return (
             <Box paddingBottom="1em" flex="1">
               <Text
+                style={{ wordWrap: "break-word" }}
                 fontFamily="inter"
                 fontSize="sm"
                 color="#FFFFFF"
@@ -78,8 +79,21 @@ function Messages() {
                 >
                   {username}
                 </Text>
-                : {message} {time}
+                : {message}
+                <Text
+                  as="span"
+                  color="#EEF0F2"
+                  fontWeight="thin"
+                  textAlign="center"
+                  fontSize="xs"
+                  opacity="0.5"
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  {" "}
+                  {time}
+                </Text>
               </Text>
+
               <div ref={messageEndRef}></div>
             </Box>
           );
@@ -101,7 +115,19 @@ function Messages() {
                 >
                   {username}
                 </Text>
-                : {message} {time}
+                : {message}
+                <Text
+                  as="span"
+                  color="#EEF0F2"
+                  fontWeight="thin"
+                  textAlign="center"
+                  fontSize="xs"
+                  opacity="0.5"
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  {" "}
+                  {time}
+                </Text>
               </Text>
               <div ref={messageEndRef}></div>
             </Box>
