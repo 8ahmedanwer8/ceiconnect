@@ -120,6 +120,7 @@ function Messages() {
         <textarea
           rows={1}
           placeholder="tell us what u are thinking"
+          //testing
           ref={newMessageRef}
         />
         <button onClick={handleSendMessage}>SEND</button>
