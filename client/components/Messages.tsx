@@ -3,8 +3,19 @@ import { useEffect, useRef } from "react";
 import EVENTS from "../config/events";
 import { formatAMPM } from "../utils/helpers";
 
+import {
+  Box,
+  theme,
+  Heading,
+  Text,
+  Input,
+  Stack,
+  Flex,
+  Image,
+} from "@chakra-ui/react";
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();
+  const usernameString = username.current; //crappy solution to the problem where i wanna make randomgen username part of the context but i need to use useRef bc using useState and initialzing it causes nextjs to render two different versions of the username during the prerender and the real render since it is a random username each time. so i use a useRef instead to avoid having to use useState. i also cant just intitialize useState inside of useEffect cuz that will be infinite loop i think
   const newMessageRef = useRef(null);
   const messageEndRef = useRef(null);
 
@@ -13,7 +24,11 @@ function Messages() {
     if (!String(message).trim()) {
       return;
     }
-    socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, { roomId, message, username });
+    socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, {
+      roomId,
+      message,
+      usernameString,
+    });
 
     const date = new Date();
 
@@ -24,7 +39,7 @@ function Messages() {
     setMessages([
       ...messages,
       {
-        username: "You",
+        username: `You (${usernameString})`,
         message,
         time: `${formatAMPM(date)}`,
       },
@@ -42,25 +57,74 @@ function Messages() {
   }
 
   return (
-    <div>
+    <Box mx="0.5em" position="relative" h="500px" my="1em" overflow="scroll">
       {messages.map(({ message, username, time }, index) => {
-        return (
-          <p key={index}>
-            {time} {username} {message}
-          </p>
-        );
+        console.log(typeof username, typeof `You (${usernameString})`);
+        if (username === `You (${usernameString})`) {
+          return (
+            <Box paddingBottom="1em" flex="1">
+              <Text
+                fontFamily="inter"
+                fontSize="sm"
+                color="#FFFFFF"
+                key={index}
+              >
+                <Text
+                  as="span"
+                  fontFamily="inter"
+                  fontSize="sm"
+                  color="#B4AAF1"
+                  key={index}
+                >
+                  {username}
+                </Text>
+                : {message} {time}
+              </Text>
+              <div ref={messageEndRef}></div>
+            </Box>
+          );
+        } else {
+          return (
+            <Box paddingBottom="1em" flex="1">
+              <Text
+                fontFamily="inter"
+                fontSize="sm"
+                color="#FFFFFF"
+                key={index}
+              >
+                <Text
+                  as="span"
+                  fontFamily="inter"
+                  fontSize="sm"
+                  color="#F0F1AA"
+                  key={index}
+                >
+                  {username}
+                </Text>
+                : {message} {time}
+              </Text>
+              <div ref={messageEndRef}></div>
+            </Box>
+          );
+        }
       })}
-      <div ref={messageEndRef}></div>
-
-      <div>
+      <Box
+        height="50px"
+        position="absolute"
+        bottom="0"
+        w="100%"
+        p="1em"
+        bg="#2E2E2E"
+      >
+        {/* <Input placeholder="Type something" /> */}
         <textarea
           rows={1}
           placeholder="tell us what u are thinking"
           ref={newMessageRef}
         />
-        <button onClick={handleSendMessage}>SEND </button>
-      </div>
-    </div>
+        <button onClick={handleSendMessage}>SEND</button>
+      </Box>
+    </Box>
   );
 }
 export default Messages;
