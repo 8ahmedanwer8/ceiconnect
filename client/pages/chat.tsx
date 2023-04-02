@@ -49,26 +49,7 @@ export default function Chat() {
         </Heading>
       </Box>
       <Box maxW="full" mx="auto" px="1em" py="1em">
-        <Box bgColor="#171721" px="1em" py="1em" w="100%" h="100%">
-          <Text
-            fontFamily="libre"
-            color="#EEF0F2"
-            fontWeight="semibold"
-            textAlign="center"
-            fontSize="lg"
-          >
-            Say something to LusterousGaboon! woohoo
-          </Text>
-        </Box>
         <Box bgColor="#171721" px="1em" w="100%" h="100%">
-          <Text
-            color="#EEF0F2"
-            fontWeight="regular"
-            textAlign="center"
-            fontSize="xs"
-          >
-            Monday April 12 2023, 9:50 AM
-          </Text>
           <Messages></Messages>
         </Box>
       </Box>

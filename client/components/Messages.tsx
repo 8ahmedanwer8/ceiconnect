@@ -57,7 +57,26 @@ function Messages() {
   }
 
   return (
-    <Box mx="0.5em" position="relative" h="500px" my="1em" overflow="scroll">
+    <Box mx="0.5em" position="relative" h="80vh" my="1em" overflow="scroll">
+      <Box bgColor="#171721" px="1em" py="1em" w="100%">
+        <Text
+          fontFamily="libre"
+          color="#EEF0F2"
+          fontWeight="semibold"
+          textAlign="center"
+          fontSize="lg"
+        >
+          Say something to LusterousGaboon! woohoo
+        </Text>
+        <Text
+          color="#EEF0F2"
+          fontWeight="regular"
+          textAlign="center"
+          fontSize="xs"
+        >
+          Monday April 12 2023, 9:50 AM
+        </Text>
+      </Box>
       {messages.map(({ message, username, time }, index) => {
         console.log(typeof username, typeof `You (${usernameString})`);
         if (username === `You (${usernameString})`) {
@@ -136,7 +155,7 @@ function Messages() {
       })}
       <Box
         height="50px"
-        position="absolute"
+        // position="absolute"
         bottom="0"
         w="100%"
         p="1em"
