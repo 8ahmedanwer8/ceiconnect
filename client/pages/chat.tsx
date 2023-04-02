@@ -48,8 +48,8 @@ export default function Chat() {
           CeiConnect
         </Heading>
       </Box>
-      <Box maxW="full" mx="auto" px="1em" py="1em">
-        <Box bgColor="#171721" px="1em" w="100%" h="100%">
+      <Box maxW="full" px="1em" py="1em">
+        <Box bgColor="#171721" w="100%" h="100%">
           <Messages></Messages>
         </Box>
       </Box>

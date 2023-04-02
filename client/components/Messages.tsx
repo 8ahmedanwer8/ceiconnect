@@ -2,16 +2,18 @@ import { useSockets } from "../context/sockets.context";
 import { useEffect, useRef } from "react";
 import EVENTS from "../config/events";
 import { formatAMPM } from "../utils/helpers";
-
+import SendIcon from "../../client/public/send-icon.svg";
+import Image from "next/image";
 import {
   Box,
-  theme,
+  InputGroup,
+  InputRightElement,
+  Button,
   Heading,
   Text,
   Input,
   Stack,
   Flex,
-  Image,
 } from "@chakra-ui/react";
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();
@@ -57,7 +59,7 @@ function Messages() {
   }
 
   return (
-    <Box mx="0.5em" position="relative" h="80vh" my="1em" overflow="scroll">
+    <Box position="relative" h="80vh" overflow="scroll">
       <Box bgColor="#171721" px="1em" py="1em" w="100%">
         <Text
           fontFamily="libre"
@@ -77,98 +79,149 @@ function Messages() {
           Monday April 12 2023, 9:50 AM
         </Text>
       </Box>
-      {messages.map(({ message, username, time }, index) => {
-        console.log(typeof username, typeof `You (${usernameString})`);
-        if (username === `You (${usernameString})`) {
-          return (
-            <Box paddingBottom="1em" flex="1">
-              <Text
-                style={{ wordWrap: "break-word" }}
-                fontFamily="inter"
-                fontSize="sm"
-                color="#FFFFFF"
-                key={index}
-              >
+      <Box px="1em">
+        {messages.map(({ message, username, time }, index) => {
+          console.log(typeof username, typeof `You (${usernameString})`);
+          if (username === `You (${usernameString})`) {
+            return (
+              <Box paddingBottom="1em" flex="1">
                 <Text
-                  as="span"
+                  style={{ wordWrap: "break-word" }}
                   fontFamily="inter"
                   fontSize="sm"
-                  color="#B4AAF1"
+                  color="#FFFFFF"
                   key={index}
                 >
-                  {username}
+                  <Text
+                    as="span"
+                    fontFamily="inter"
+                    fontSize="sm"
+                    color="#B4AAF1"
+                    key={index}
+                  >
+                    {username}
+                  </Text>
+                  : {message}
+                  <Text
+                    as="span"
+                    color="#EEF0F2"
+                    fontWeight="thin"
+                    textAlign="center"
+                    fontSize="xs"
+                    opacity="0.5"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {" "}
+                    {time}
+                  </Text>
                 </Text>
-                : {message}
-                <Text
-                  as="span"
-                  color="#EEF0F2"
-                  fontWeight="thin"
-                  textAlign="center"
-                  fontSize="xs"
-                  opacity="0.5"
-                  style={{ whiteSpace: "nowrap" }}
-                >
-                  {" "}
-                  {time}
-                </Text>
-              </Text>
 
-              <div ref={messageEndRef}></div>
-            </Box>
-          );
-        } else {
-          return (
-            <Box paddingBottom="1em" flex="1">
-              <Text
-                fontFamily="inter"
-                fontSize="sm"
-                color="#FFFFFF"
-                key={index}
-              >
+                <div ref={messageEndRef}></div>
+              </Box>
+            );
+          } else {
+            return (
+              <Box paddingBottom="1em" flex="1">
                 <Text
-                  as="span"
                   fontFamily="inter"
                   fontSize="sm"
-                  color="#F0F1AA"
+                  color="#FFFFFF"
                   key={index}
                 >
-                  {username}
+                  <Text
+                    as="span"
+                    fontFamily="inter"
+                    fontSize="sm"
+                    color="#F0F1AA"
+                    key={index}
+                  >
+                    {username}
+                  </Text>
+                  : {message}
+                  <Text
+                    as="span"
+                    color="#EEF0F2"
+                    fontWeight="thin"
+                    textAlign="center"
+                    fontSize="xs"
+                    opacity="0.5"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {" "}
+                    {time}
+                  </Text>
                 </Text>
-                : {message}
-                <Text
-                  as="span"
-                  color="#EEF0F2"
-                  fontWeight="thin"
-                  textAlign="center"
-                  fontSize="xs"
-                  opacity="0.5"
-                  style={{ whiteSpace: "nowrap" }}
-                >
-                  {" "}
-                  {time}
-                </Text>
-              </Text>
-              <div ref={messageEndRef}></div>
-            </Box>
-          );
-        }
-      })}
-      <Box
-        height="50px"
-        // position="absolute"
+                <div ref={messageEndRef}></div>
+              </Box>
+            );
+          }
+        })}
+      </Box>
+      {/* <Box
+        height="60px"
+        position="fixed"
+        marginBottom="1em"
+        p="0px"
+        w="90%"
         bottom="0"
-        w="100%"
-        p="1em"
         bg="#2E2E2E"
+        display="flex"
+        alignItems="center"
       >
-        {/* <Input placeholder="Type something" /> */}
-        <textarea
-          rows={1}
-          placeholder="tell us what u are thinking"
-          //testing again
-          ref={newMessageRef}
-        />
-        <button onClick={handleSendMessage}>SEND</button>
+        <InputGroup size="md" flexGrow={1}>
+          <Input
+            bgColor="#D9D9D9"
+            ref={newMessageRef}
+            placeholder="Type something"
+          />
+        </InputGroup>
+        <Button h="100%" size="sm" onClick={handleSendMessage}>
+          SEND
+        </Button>
+      </Box> */}
+      <Box
+        height="9vh"
+        marginTop="1em"
+        position="fixed"
+        w="100%"
+        paddingLeft="1em"
+        left="0"
+        bottom="0"
+        bg="#201F20"
+        display="flex"
+        alignItems="center"
+      >
+        <InputGroup size="md" flexGrow={1}>
+          <Input
+            bgColor="#D9D9D9"
+            ref={newMessageRef}
+            placeholder="Type something"
+          />
+        </InputGroup>
+
+        <Box
+          h="2rem"
+          w="3rem"
+          marginLeft="1em"
+          cursor="pointer"
+          onClick={handleSendMessage}
+        >
+          <img
+            style={{
+              width: "30px",
+              height: "30px",
+              filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
+            }}
+            src="./send-icon.svg"
+          ></img>
+          {/* <Image
+            style={{ color: "blue" }}
+            height={30}
+            alt="send button"
+            width={30}
+            src={SendIcon}
+          /> */}
+        </Box>
       </Box>
     </Box>
   );
