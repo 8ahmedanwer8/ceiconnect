@@ -11,6 +11,7 @@ import {
   Button,
   Heading,
   Text,
+  Textarea,
   Input,
   Stack,
   Flex,
@@ -157,28 +158,6 @@ function Messages() {
           }
         })}
       </Box>
-      {/* <Box
-        height="60px"
-        position="fixed"
-        marginBottom="1em"
-        p="0px"
-        w="90%"
-        bottom="0"
-        bg="#2E2E2E"
-        display="flex"
-        alignItems="center"
-      >
-        <InputGroup size="md" flexGrow={1}>
-          <Input
-            bgColor="#D9D9D9"
-            ref={newMessageRef}
-            placeholder="Type something"
-          />
-        </InputGroup>
-        <Button h="100%" size="sm" onClick={handleSendMessage}>
-          SEND
-        </Button>
-      </Box> */}
       <Box
         height="9vh"
         marginTop="1em"
@@ -206,20 +185,14 @@ function Messages() {
           cursor="pointer"
           onClick={handleSendMessage}
         >
-          <img
+          <img src="./send-icon.svg" />
+          {/* <img
             style={{
               width: "30px",
               height: "30px",
               filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
             }}
             src="./send-icon.svg"
-          ></img>
-          {/* <Image
-            style={{ color: "blue" }}
-            height={30}
-            alt="send button"
-            width={30}
-            src={SendIcon}
           /> */}
         </Box>
       </Box>
