@@ -185,15 +185,14 @@ function Messages() {
           cursor="pointer"
           onClick={handleSendMessage}
         >
-          <img src="./send-icon.svg" />
-          {/* <img
+          <img
             style={{
               width: "30px",
               height: "30px",
               filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
             }}
-            src="./send-icon.svg"
-          /> */}
+            src="https://www.svgrepo.com/show/230979/send.svg"
+          />
         </Box>
       </Box>
     </Box>

@@ -48,8 +48,6 @@ export default function Chat() {
           CeiConnect
         </Heading>
       </Box>
-      <img src="./send-icon.svg" />
-
       <Box maxW="full" px="1em" py="1em">
         <Box bgColor="#171721" w="100%" h="100%">
           <Messages></Messages>
