@@ -5,6 +5,7 @@ const inter = Inter({ subsets: ["latin"] });
 import EVENTS from "../config/events";
 import Messages from "../components/Messages";
 import Router from "next/router";
+
 import { Box, Text, Heading } from "@chakra-ui/react";
 
 import { useState, useEffect } from "react";
