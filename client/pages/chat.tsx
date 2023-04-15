@@ -12,10 +12,14 @@ import {
   Box,
   Heading,
   Modal,
+  Text,
   Button,
   ModalOverlay,
   ModalContent,
   ModalHeader,
+  VStack,
+  Spacer,
+  Spinner,
   ModalFooter,
   ModalBody,
   ModalCloseButton,
@@ -78,17 +82,22 @@ export default function Chat() {
           <Messages></Messages>
           <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Modal Title</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>FJIODSIOFJIOSDIOFSIDOFJOISDJOI</ModalBody>
+            <ModalContent p="4" position="absolute" top="30%" bg="#171A21">
+              <ModalCloseButton color="white"></ModalCloseButton>
+              <ModalBody>
+                <Text fontFamily="roboto" fontSize="lg" color="#FFFFFF">
+                  Are you sure you want to leave this chat? Chat history will be
+                  lost and maybe your friend too :(
+                </Text>
+              </ModalBody>
 
               <ModalFooter>
+                <Button colorScheme="red" onClick={handleDisconnect}>
+                  Leave chat
+                </Button>
+                <Spacer />
                 <Button colorScheme="blue" mr={3} onClick={onClose}>
                   Go back
-                </Button>
-                <Button variant="ghost" onClick={handleDisconnect}>
-                  Leave chat
                 </Button>
               </ModalFooter>
             </ModalContent>
