@@ -5,15 +5,27 @@ const inter = Inter({ subsets: ["latin"] });
 import EVENTS from "../config/events";
 import Messages from "../components/Messages";
 import Router from "next/router";
+import load from "./load.svg";
 
-import { Box, Text, Heading } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  Heading,
+  Container,
+  Center,
+  Spinner,
+  VStack,
+} from "@chakra-ui/react";
 
 import { useState, useEffect } from "react";
 
 export default function Find() {
   const { socket, rooms, username, roomId } = useSockets();
   const [loadingText, setLoadingText] = useState("I am loading text");
+  const [tipText, setTipText] = useState("I am loading text");
+
   const [loading, setLoading] = useState(false);
+
   function findSomeone() {
     setLoading(true);
     const preferences = {
@@ -77,22 +89,27 @@ export default function Find() {
   }, [username]);
 
   return (
-    <Box w="full" h="full" bgColor="#171A21">
-      <Box h="fit-content" maxW="100%" bgColor="#0A1A3C" p="1em">
-        <Heading color="#F0F443" fontSize="4xl">
-          CeiConnect
-        </Heading>
+    <Container
+      // bgImage="url(https://media.giphy.com/media/iI9IY9XXl2eKmDpQMY/giphy.gif)"
+      // bgRepeat="no-repeat"
+      // bgSize="cover"
+      bgColor="#0B1A3C"
+      minHeight="100vh"
+      maxW="container.2xl"
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+    >
+      {/*use different dimensions of loading screen for larger screens. maybe not too big. follow figma */}
+      <Box bgColor="#171A21" w="80vw" h="50vh">
+        <VStack>
+          <Text mt="4" mb="8" fontFamily="roboto" fontSize="xl" color="#FFFFFF">
+            {loadingText}
+          </Text>
+          <Spinner boxSize={24} color="white"></Spinner>
+          <Text>{tipText}</Text>
+        </VStack>
       </Box>
-      <div>
-        <p>Your user name is {JSON.stringify(username)}</p>
-        <p>{loadingText}</p>
-        some loading screen
-        <div>rooms</div>
-        <p> {JSON.stringify(rooms)}</p>
-      </div>
-      <Box>{roomId}</Box>
-      <Text>You are chatting with {username.current}</Text>
-      {/* <Messages></Messages> */}
-    </Box>
+    </Container>
   );
 }

@@ -151,7 +151,6 @@ function Messages() {
                     {" "}
                     {time}
                   </Text>
-                  <div ref={messageEndRef}></div>
                 </Text>
                 <div ref={messageEndRef}></div>
               </Box>
