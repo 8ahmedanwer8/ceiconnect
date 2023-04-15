@@ -4,7 +4,7 @@ import { useSockets } from "../context/sockets.context";
 const inter = Inter({ subsets: ["latin"] });
 import EVENTS from "../config/events";
 import Messages from "../components/Messages";
-import Router from "next/router";
+import { useRouter } from "next/router";
 import load from "./load.svg";
 
 import {
@@ -25,6 +25,7 @@ export default function Find() {
   const [tipText, setTipText] = useState("I am loading text");
 
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   function findSomeone() {
     setLoading(true);
@@ -54,7 +55,7 @@ export default function Find() {
           setLoadingText("Joining room");
 
           //go to chat page
-          Router.push({
+          router.push({
             pathname: "/chat",
             query: { roomId: `${roomkey}` },
           });
@@ -70,7 +71,7 @@ export default function Find() {
           setLoadingText("Joining room");
 
           //go to chat page
-          Router.push({
+          router.push({
             pathname: "/chat",
             query: { roomId: `${roomkey}` },
           });

@@ -27,7 +27,6 @@ function InfoSection() {
       // bgImage="url(https://media.giphy.com/media/iI9IY9XXl2eKmDpQMY/giphy.gif)"
       // bgRepeat="no-repeat"
       // bgSize="cover"
-      minH="100vh"
       maxW="container.2xl"
     >
       <Center pt={8} px={4}>
