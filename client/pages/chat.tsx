@@ -35,7 +35,6 @@ export default function Chat() {
   useEffect(() => {
     router.beforePopState(({ as }) => {
       if (as !== router.asPath) {
-        console.log("BAD");
         onOpen();
       }
     });
@@ -73,7 +72,14 @@ export default function Chat() {
   return (
     <Box minH="100vh" maxW="full" bgColor="#171A21">
       <Box h="fit-content" w="100%" bgColor="#0A1A3C" p="1em">
-        <Heading color="#F0F443" as="h1" fontWeight="semibold" fontSize="3xl">
+        <Heading
+          onClick={onOpen}
+          color="#F0F443"
+          as="h1"
+          fontWeight="semibold"
+          fontSize="3xl"
+          cursor="pointer"
+        >
           CeiConnect
         </Heading>
       </Box>
@@ -82,7 +88,7 @@ export default function Chat() {
           <Messages></Messages>
           <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
-            <ModalContent p="4" position="absolute" top="30%" bg="#171A21">
+            <ModalContent p="4" position="absolute" top="20%" bg="#171A21">
               <ModalCloseButton color="white"></ModalCloseButton>
               <ModalBody>
                 <Text fontFamily="roboto" fontSize="lg" color="#FFFFFF">

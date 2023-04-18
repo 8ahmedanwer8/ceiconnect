@@ -4,6 +4,11 @@ import { Server, Socket } from "socket.io";
 import logger from "./utils/logger";
 import { formatAMPM } from "./utils/helpers";
 import { SocketAddress } from "net";
+
+//lifecycle of a chatroom => creation, both person join, one person leaves but the other can choose to stay
+//when last person leaves, chatroom is deleted. at any time, unregistered members cant join if their id or token
+//doesnt match whatever expected id/token is in the database/cache
+
 const EVENTS = {
   connection: "connection",
   CLIENT: {

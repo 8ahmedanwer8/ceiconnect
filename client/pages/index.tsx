@@ -11,7 +11,6 @@ import InfoSection from "../components/Homepage/InfoSection";
 import Rooms from "../components/Rooms";
 import Messages from "../components/Messages";
 import { useRef } from "react";
-import Router from "next/router";
 
 import {
   Button,
