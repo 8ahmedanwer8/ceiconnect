@@ -130,16 +130,19 @@ export default function Chat() {
     });
   }
   async function handleDisconnect2() {
-    console.log("disconnecting user");
-    setLoading(true);
     try {
       setLoading(true);
       await disconnectUser2();
+      setLoading(false);
+
       router.push({
         pathname: "/",
       });
     } catch (error) {
       alert(error);
+      router.push({
+        pathname: "/",
+      });
       console.error("Error during disconnection:", error);
     }
   }
@@ -180,7 +183,7 @@ export default function Chat() {
       <Box maxW="full" px="1em" py="1em">
         <Box bgColor="#171721" w="100%" h="100%">
           <Messages></Messages>
-          <Modal isOpen={isOpen} onClose={onClose}>
+          <Modal isLoading={loading} isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
             <ModalContent p="4" position="absolute" top="20%" bg="#171A21">
               <ModalCloseButton color="white"></ModalCloseButton>
@@ -192,7 +195,11 @@ export default function Chat() {
               </ModalBody>
 
               <ModalFooter>
-                <Button colorScheme="red" onClick={handleDisconnect2}>
+                <Button
+                  isLoading={loading}
+                  colorScheme="red"
+                  onClick={handleDisconnect2}
+                >
                   Leave chat
                 </Button>
                 <Spacer />
