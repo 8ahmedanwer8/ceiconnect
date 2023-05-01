@@ -7,7 +7,7 @@ import Messages from "../components/Messages";
 import Router from "next/router";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState, useEffect, useDisc } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -44,7 +44,24 @@ export default function Chat() {
     };
   }, [router]);
 
+  function disconnectUser() {
+    //send message to server saying disconnect
+    //server receives the message and removes user from room
+    //sends response back here saying that disconnection has been done
+    //orrr there was an error
+    //tell other user that their friend left
+    console.log("trying to disconnect");
+    if (roomId) {
+      socket.emit(EVENTS.CLIENT.DISCONNECT, {
+        roomId: roomId,
+        username: username,
+      });
+    }
+  }
+
   function handleDisconnect() {
+    // TODO for reloading page, closing tab or window, or clciking or back button or clicking on home page
+    disconnectUser();
     router.push({
       pathname: "/",
     });

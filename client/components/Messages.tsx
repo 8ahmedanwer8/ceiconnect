@@ -4,18 +4,7 @@ import EVENTS from "../config/events";
 import { formatAMPM } from "../utils/helpers";
 import SendIcon from "../../client/public/send-icon.svg";
 import Image from "next/image";
-import {
-  Box,
-  InputGroup,
-  InputRightElement,
-  Button,
-  Heading,
-  Text,
-  Textarea,
-  Input,
-  Stack,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, InputGroup, Text, Input } from "@chakra-ui/react";
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();
   const usernameString = username.current; //crappy solution to the problem where i wanna make randomgen username part of the context but i need to use useRef bc using useState and initialzing it causes nextjs to render two different versions of the username during the prerender and the real render since it is a random username each time. so i use a useRef instead to avoid having to use useState. i also cant just intitialize useState inside of useEffect cuz that will be infinite loop i think
@@ -117,6 +106,25 @@ function Messages() {
                   </Text>
                 </Text>
 
+                <div ref={messageEndRef}></div>
+              </Box>
+            );
+          } else if (message == "LEFT") {
+            {
+              console.log("this one officer");
+            }
+            return (
+              <Box paddingBottom="1em" flex="1">
+                <Text
+                  as="i"
+                  fontFamily="inter"
+                  fontSize="sm"
+                  color="#FFFFFF"
+                  key={index}
+                  textAlign="center"
+                >
+                  {username.current} disconnected from the chat
+                </Text>
                 <div ref={messageEndRef}></div>
               </Box>
             );

@@ -19,6 +19,7 @@ const EVENTS = {
     WAITING_ROOM_MEMBERS: "WAITING_ROOM_MEMBERS",
     CONNECT_ME: "CONNECT_ME",
     MY_USERNAME: "MY_USERNAME",
+    DISCONNECT: "DISCONNECT",
   },
   SERVER: {
     ROOMS: "ROOMS",
@@ -28,6 +29,8 @@ const EVENTS = {
     CONNECTEDWITHYOU: "CONNECTEDWITHYOU",
     CONNECTED: "CONNECTED",
     OTHER_USERNAME: "OTHER_USERNAME",
+    DISCONNECTED: "DISCONNECTED",
+    LEFT_YOU: "LEFT_YOU",
   },
 };
 
@@ -60,9 +63,9 @@ function socket({ io }: { io: Server }) {
           //how many clients/users can i have in the wainting room? i need to support 15k
           // Do something with the resolved value
           const waitingUsers = client.map(({ id }) => id);
-          console.log("upon trying to connect, we have the following list");
-          console.log(waitingUsers);
-          console.log("current user is ", socket.id);
+          // console.log("upon trying to connect, we have the following list");
+          // console.log(waitingUsers);
+          // console.log("current user is ", socket.id);
 
           socket.emit(EVENTS.SERVER.JOINED_WAITING_ROOM, waitingUsers);
         });
@@ -132,7 +135,7 @@ function socket({ io }: { io: Server }) {
 
     //when a user creates a new room
     socket.on(EVENTS.CLIENT.CREATE_ROOM, ({ roomName }) => {
-      console.log(roomName);
+      // console.log(roomName);
 
       //create room id
       const roomId = nanoid();
@@ -169,9 +172,29 @@ function socket({ io }: { io: Server }) {
     );
 
     //when a user joins a room
-    socket.on(EVENTS.CLIENT.JOIN_ROOM, (roomId) => {
+    socket.on(EVENTS.CLIENT.JOIN_ROOM, ({ roomId }) => {
       socket.join(roomId);
       socket.emit(EVENTS.SERVER.JOINED_ROOM, roomId);
+    });
+
+    socket.on(EVENTS.CLIENT.DISCONNECT, ({ roomId, username }) => {
+      console.log("disconnected you ", roomId, username);
+      socket.leave(roomId);
+      socket.emit(EVENTS.SERVER.DISCONNECTED, roomId);
+      const sockets = getSockets(io, roomId);
+
+      sockets.then((socketList) => {
+        const waitingUsers = socketList.map(({ id }) => id);
+        console.log(waitingUsers);
+        const currentSocketId = socket.id;
+        const otherSocket = socketList.find(
+          (socket) => socket.id !== currentSocketId
+        );
+        if (otherSocket) {
+          const date = new Date();
+          socket.to(otherSocket.id).emit(EVENTS.SERVER.LEFT_YOU, username);
+        }
+      });
     });
   });
 }

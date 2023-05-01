@@ -31,6 +31,17 @@ function SocketsProvider(props: any) {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    //we need to close socket when closing window to avoid error with connecting to socket or something
+    const handleBeforeUnload = () => {
+      socket.close();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
     username.current = generateRandomUsername();
     window.onfocus = function () {
       document.title = "CeiConnect";
@@ -57,6 +68,19 @@ function SocketsProvider(props: any) {
   useEffect(() => {
     socket.on(EVENTS.SERVER.OTHER_USERNAME, (value) => {
       otherUsername.current = value;
+    });
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on(EVENTS.SERVER.DISCONNECTED, () => {
+      setRoomId(null);
+      setMessages(() => []);
+    });
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on(EVENTS.SERVER.LEFT_YOU, (username) => {
+      setMessages((messages) => [...messages, { message: "LEFT", username }]);
     });
   }, [socket]);
 
