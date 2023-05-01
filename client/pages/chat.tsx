@@ -59,12 +59,89 @@ export default function Chat() {
     }
   }
 
+  function disconnectUser2(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      console.log("trying to disconnect");
+      let timeoutId;
+
+      const disconnectTimeout = 5000; // Timeout duration in milliseconds
+
+      const handleDisconnectResponse = () => {
+        clearTimeout(timeoutId);
+        resolve(); // Disconnection successful
+      };
+
+      const handleTimeout = () => {
+        socket.off(EVENTS.SERVER.DISCONNECTED, handleDisconnectResponse);
+        reject(new Error("Disconnection timeout")); // Disconnection unsuccessful
+      };
+
+      if (roomId) {
+        socket.emit(EVENTS.CLIENT.DISCONNECT, {
+          roomId: roomId,
+          username: username,
+        });
+
+        timeoutId = setTimeout(handleTimeout, disconnectTimeout);
+
+        socket.once(EVENTS.SERVER.DISCONNECTED, handleDisconnectResponse);
+      } else {
+        resolve(); // No roomId, consider disconnection successful
+      }
+    });
+  }
+
+  //show warning dialog when user reloads page
+  // useEffect(() => {
+  //   const handleBeforeUnload = (event) => {
+  //     // Perform any necessary cleanup or execute the desired function here
+  //     // For example, you can log out the user
+  //     handleDisconnect();
+
+  //     // Custom message for Chrome
+  //     event.preventDefault();
+  //     event.returnValue = "";
+
+  //     // Custom message for Firefox
+  //     return "";
+  //   };
+
+  //   const handleUnload = () => {
+  //     // Perform any necessary cleanup or execute the desired function here
+  //     // For example, you can log out the user
+  //     handleDisconnect();
+  //   };
+
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
+  //   window.addEventListener("unload", handleUnload);
+
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //     window.removeEventListener("unload", handleUnload);
+  //   };
+  // }, []);
+
   function handleDisconnect() {
     // TODO for reloading page, closing tab or window, or clciking or back button or clicking on home page
-    disconnectUser();
+    console.log("disconnecting user");
+    disconnectUser2();
     router.push({
       pathname: "/",
     });
+  }
+  async function handleDisconnect2() {
+    console.log("disconnecting user");
+    setLoading(true);
+    try {
+      setLoading(true);
+      await disconnectUser2();
+      router.push({
+        pathname: "/",
+      });
+    } catch (error) {
+      alert(error);
+      console.error("Error during disconnection:", error);
+    }
   }
 
   useEffect(() => {
@@ -115,7 +192,7 @@ export default function Chat() {
               </ModalBody>
 
               <ModalFooter>
-                <Button colorScheme="red" onClick={handleDisconnect}>
+                <Button colorScheme="red" onClick={handleDisconnect2}>
                   Leave chat
                 </Button>
                 <Spacer />
