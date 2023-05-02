@@ -44,21 +44,6 @@ export default function Chat() {
     };
   }, [router]);
 
-  function disconnectUser() {
-    //send message to server saying disconnect
-    //server receives the message and removes user from room
-    //sends response back here saying that disconnection has been done
-    //orrr there was an error
-    //tell other user that their friend left
-    console.log("trying to disconnect");
-    if (roomId) {
-      socket.emit(EVENTS.CLIENT.DISCONNECT, {
-        roomId: roomId,
-        username: username,
-      });
-    }
-  }
-
   function disconnectUser2(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       console.log("trying to disconnect");
@@ -91,40 +76,43 @@ export default function Chat() {
     });
   }
 
-  //show warning dialog when user reloads page
-  // useEffect(() => {
-  //   const handleBeforeUnload = (event) => {
-  //     // Perform any necessary cleanup or execute the desired function here
-  //     // For example, you can log out the user
-  //     handleDisconnect();
+  //show warning dialog when user reloads page or closes it
+  useEffect(() => {
+    //this does not work for some reason yet. the disconnection message isn't received in the backend
+    const handleUnload = () => {
+      // Perform any necessary cleanup or execute the desired function here
+      // For example, you can log out the user
+      handleDisconnect();
+    };
 
-  //     // Custom message for Chrome
-  //     event.preventDefault();
-  //     event.returnValue = "";
+    // window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("unload", handleUnload);
 
-  //     // Custom message for Firefox
-  //     return "";
-  //   };
+    return () => {
+      // window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("unload", handleUnload);
+    };
+  }, []);
 
-  //   const handleUnload = () => {
-  //     // Perform any necessary cleanup or execute the desired function here
-  //     // For example, you can log out the user
-  //     handleDisconnect();
-  //   };
-
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
-  //   window.addEventListener("unload", handleUnload);
-
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleBeforeUnload);
-  //     window.removeEventListener("unload", handleUnload);
-  //   };
-  // }, []);
+  function disconnectUser() {
+    //send message to server saying disconnect
+    //server receives the message and removes user from room
+    //sends response back here saying that disconnection has been done
+    //orrr there was an error
+    //tell other user that their friend left
+    console.log("trying to disconnect");
+    if (roomId) {
+      socket.emit(EVENTS.CLIENT.DISCONNECT, {
+        roomId: roomId,
+        username: username,
+      });
+    }
+  }
 
   function handleDisconnect() {
     // TODO for reloading page, closing tab or window, or clciking or back button or clicking on home page
     console.log("disconnecting user");
-    disconnectUser2();
+    disconnectUser();
     router.push({
       pathname: "/",
     });
