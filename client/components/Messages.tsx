@@ -10,6 +10,16 @@ function Messages() {
   const usernameString = username.current; //crappy solution to the problem where i wanna make randomgen username part of the context but i need to use useRef bc using useState and initialzing it causes nextjs to render two different versions of the username during the prerender and the real render since it is a random username each time. so i use a useRef instead to avoid having to use useState. i also cant just intitialize useState inside of useEffect cuz that will be infinite loop i think
   const newMessageRef = useRef(null);
   const messageEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const handleKeyDown = (event) => {
+    console.log("entered");
+    if (event.key === "Enter") {
+      event.preventDefault();
+      // Trigger the button click event
+      inputRef.current.click();
+    }
+  };
 
   function handleSendMessage() {
     const message = newMessageRef.current.value;
@@ -180,7 +190,9 @@ function Messages() {
       >
         <InputGroup size="md" flexGrow={1}>
           <Input
+            autoFocus="true"
             bgColor="#D9D9D9"
+            onKeyDown={handleKeyDown}
             ref={newMessageRef}
             placeholder="Type something"
           />
@@ -191,6 +203,7 @@ function Messages() {
           w="3rem"
           marginLeft="1em"
           cursor="pointer"
+          ref={inputRef}
           onClick={handleSendMessage}
         >
           <img
