@@ -79,6 +79,8 @@ function SocketsProvider(props: any) {
   }, [socket]);
 
   useEffect(() => {
+    //TODO maybe have a timer that automatically kicks a straggler back to main
+    //chat so that they are not just occupying a room for no reason
     socket.on(EVENTS.SERVER.LEFT_YOU, (username) => {
       setMessages((messages) => [...messages, { message: "LEFT", username }]);
     });

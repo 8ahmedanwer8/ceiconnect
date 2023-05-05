@@ -4,6 +4,7 @@ import { Server, Socket } from "socket.io";
 import logger from "./utils/logger";
 import { formatAMPM } from "./utils/helpers";
 import { SocketAddress } from "net";
+import NodeCache from "node-cache";
 
 //lifecycle of a chatroom => creation, both person join, one person leaves but the other can choose to stay
 //when last person leaves, chatroom is deleted. at any time, unregistered members cant join if their id or token
@@ -35,10 +36,12 @@ const EVENTS = {
 };
 
 const rooms: Record<string, { name: string }> = {}; //we can use array here too
+const cache = new NodeCache();
 
 function socket({ io }: { io: Server }) {
   logger.info(`Sockets enabled`);
   const waitingRoomId = nanoid();
+  cache.set(waitingRoomId, []);
 
   const getSockets = async (io: Server, id: string) => {
     const sockets = await io.in(id).fetchSockets();
@@ -56,6 +59,14 @@ function socket({ io }: { io: Server }) {
         name: "WAITING_ROOM",
       };
       socket.join(waitingRoomId);
+      let data: string[] | undefined = cache.get(waitingRoomId);
+      data?.push(socket.id);
+      cache.set(waitingRoomId, data);
+      logger.info(
+        `Socket ${socket.id} joined waiting room. Room members now: ${cache.get(
+          waitingRoomId
+        )}`
+      );
 
       try {
         const clientsInRoom = getSockets(io, waitingRoomId);
@@ -76,20 +87,35 @@ function socket({ io }: { io: Server }) {
     });
 
     socket.on(EVENTS.CLIENT.CONNECT_ME, (username) => {
-      //when a user is in the waiting room waiting to be paired up
+      //when a user is in the waiting room waiting and requesting to be paired up
       const currentSocketId = socket.id;
       const sockets = getSockets(io, waitingRoomId);
       sockets.then((socketList) => {
         const newChatRoomId = nanoid();
+        cache.set(newChatRoomId, []);
         const otherSocket = socketList.find(
           (socket) => socket.id !== currentSocketId
         );
         if (otherSocket) {
           socket.join(newChatRoomId);
           otherSocket.join(newChatRoomId);
+          let dataAdd = [socket.id, otherSocket.id];
+          cache.set(newChatRoomId, dataAdd);
+          logger.info(`Created chat room with id ${newChatRoomId}`);
+          logger.info(`Socket ${socket.id} joined room ${newChatRoomId}`);
+          logger.info(`Socket ${otherSocket.id} joined room ${newChatRoomId}`);
 
           socket.leave(waitingRoomId);
           otherSocket.leave(waitingRoomId);
+          logger.info(`Socket ${socket.id} left waiting room ${newChatRoomId}`);
+          logger.info(
+            `Socket ${otherSocket.id} left waiting room ${newChatRoomId}`
+          );
+
+          let dataRemove: string[] | undefined = cache.get(waitingRoomId);
+          dataRemove?.filter((item) => item === socket.id);
+          dataRemove?.filter((item) => item === otherSocket.id);
+          cache.set(newChatRoomId, dataRemove);
 
           rooms[currentSocketId] = {
             name: username,
@@ -133,6 +159,7 @@ function socket({ io }: { io: Server }) {
       });
     });
 
+    //THIS CAN BE DELETED
     //when a user creates a new room
     socket.on(EVENTS.CLIENT.CREATE_ROOM, ({ roomName }) => {
       // console.log(roomName);
@@ -171,6 +198,7 @@ function socket({ io }: { io: Server }) {
       }
     );
 
+    //THIS CAN ALSO BE DELETED
     //when a user joins a room
     socket.on(EVENTS.CLIENT.JOIN_ROOM, ({ roomId }) => {
       socket.join(roomId);
@@ -178,14 +206,18 @@ function socket({ io }: { io: Server }) {
     });
 
     socket.on(EVENTS.CLIENT.DISCONNECT, ({ roomId, username }) => {
-      console.log("disconnected you ", roomId, username);
+      //disconnect this socket from the room
       socket.leave(roomId);
+      logger.info(
+        `Socket ${
+          socket.id
+        } left the room ${roomId}. Room members now: ${cache.get(roomId)}`
+      );
       socket.emit(EVENTS.SERVER.DISCONNECTED, roomId);
       const sockets = getSockets(io, roomId);
 
+      //tell the other socket that their friend has left the room
       sockets.then((socketList) => {
-        const waitingUsers = socketList.map(({ id }) => id);
-        console.log(waitingUsers);
         const currentSocketId = socket.id;
         const otherSocket = socketList.find(
           (socket) => socket.id !== currentSocketId

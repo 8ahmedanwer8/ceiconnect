@@ -143,7 +143,7 @@ export default function Chat() {
   }, [roomId]);
 
   if (!roomId) {
-    //no client side validation i think which is bad which i need
+    //no server side validation i think which is bad which i need
     return (
       <div>
         <p>You are not in a chat with someone right now</p>

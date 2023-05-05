@@ -19,6 +19,18 @@ import {
 
 import { useState, useEffect } from "react";
 
+/* 
+  right now the connection works like this
+
+  u click find a room
+  then NEW_WAITING -> JOINED_WAITING_ROOM 
+  if waiting room has no one, wait until we get CONNECTEDWITHYOU 
+  -> waiting means a second person will join and they will see waiting room has another person
+  -> and they will hit the else block on their side and connect with you using the CONNECT_ME msg
+  else CONNECT_ME->	CONNECTED
+  router.push to /chat/roomId
+*/
+
 export default function Find() {
   const { socket, rooms, username, roomId } = useSockets();
   const [loadingText, setLoadingText] = useState("I am loading text");
