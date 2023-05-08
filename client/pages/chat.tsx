@@ -48,18 +48,21 @@ export default function Chat() {
   }, [router]);
 
   useEffect(() => {
+    // if the user tries to duplicate the tab, this should redirect
+    // back to the home page since the roomId is reset to null from
+    // page refresh. this is what i want.
+    // if the user somehow bypasses this and is able to stay on chat
+    // page then they try manually entering roomId in context,
+    // we have the REQUEST_JOIN socket.emit below which authorizes
+    // the users to view the page by checking the cache
     if (!roomId) {
       router.push("/");
     }
   }, []);
-  async function checkCanJoinRoom() {
-    const canJoin = await canJoinRoom(roomId);
-    return canJoin;
-  }
+
   useEffect(() => {
     socket.on(EVENTS.SERVER.REQUEST_JOIN_RESPONSE, (value) => {
       if (!value) {
-        console.log("unverified");
         router.push("/not_found");
       }
     });
@@ -73,13 +76,6 @@ export default function Chat() {
     if (roomId) {
       socket.emit(EVENTS.CLIENT.REQUEST_JOIN, roomId);
     }
-
-    // checkCanJoinRoom().then((canJoin) => {
-    //   if (!canJoin) {
-    //     // Render the appropriate message or redirect to the join page
-    //     console.log("you aren ot allowed");
-    //   }
-    // });
   }, [roomId]);
 
   // //show warning dialog when user reloads page or closes it
@@ -104,50 +100,36 @@ export default function Chat() {
   const warningText =
     "You have unsaved changes - are you sure you wish to leave this page?";
 
-  // useEffect(() => {
-  //   if (roomId) {
-  //     const handleWindowClose = (e) => {
-  //       socket.close();
-  //       // handleDisconnect();
+  useEffect(() => {
+    if (roomId) {
+      const handleWindowClose = (e) => {
+        socket.close();
+        // handleDisconnect();
 
-  //       if (!unsavedChanges) return;
-  //       e.preventDefault();
-  //       return (e.returnValue = warningText);
-  //     };
-  //     const handleBrowseAway = () => {
-  //       socket.close();
+        if (!unsavedChanges) return;
+        e.preventDefault();
+        return (e.returnValue = warningText);
+      };
+      const handleBrowseAway = () => {
+        socket.close();
 
-  //       handleDisconnect();
+        handleDisconnect();
 
-  //       if (!unsavedChanges) return;
-  //       if (window.confirm(warningText)) return;
-  //       router.events.emit("routeChangeError");
-  //       throw "routeChange aborted.";
-  //     };
-  //     window.addEventListener("beforeunload", handleWindowClose);
-  //     router.events.on("routeChangeStart", handleBrowseAway);
-  //     return () => {
-  //       // handleDisconnect();
+        if (!unsavedChanges) return;
+        if (window.confirm(warningText)) return;
+        router.events.emit("routeChangeError");
+        throw "routeChange aborted.";
+      };
+      window.addEventListener("beforeunload", handleWindowClose);
+      router.events.on("routeChangeStart", handleBrowseAway);
+      return () => {
+        // handleDisconnect();
 
-  //       window.removeEventListener("beforeunload", handleWindowClose);
-  //       router.events.off("routeChangeStart", handleBrowseAway);
-  //     };
-  //   }
-  // }, [unsavedChanges]);
-
-  // useEffect(() => {
-  //   const exitingFunction = () => {
-  //     socket.emit(EVENTS.CLIENT.CONNECT_ME, "nfuidsuisfi");
-  //     console.log("exiting...");
-  //   };
-
-  //   router.events.on("routeChangeStart", exitingFunction);
-
-  //   return () => {
-  //     socket.emit(EVENTS.CLIENT.CONNECT_ME, "nfuidsuisfi");
-  //     router.events.off("routeChangeStart", exitingFunction);
-  //   };
-  // }, []);
+        window.removeEventListener("beforeunload", handleWindowClose);
+        router.events.off("routeChangeStart", handleBrowseAway);
+      };
+    }
+  }, [unsavedChanges]);
 
   function disconnectUser() {
     //send message to server saying disconnect
@@ -232,95 +214,7 @@ export default function Chat() {
     });
   }
   // useEffect(() => {
-  //   async function checkCanJoinRoom() {
-  //     if (!roomId) return false;
-  //     const canJoin = await canJoinRoom(roomId);
-  //     return canJoin;
-  //   }
 
-  //   checkCanJoinRoom().then((canJoin) => {
-  //     if (!canJoin) {
-  //       // Render the appropriate message or redirect to the join page
-  //       router.push("/find");
-  //     }
-  //   });
-
-  //   // ...
-  // }, [roomId]);
-
-  const joinRoomCallback = (canJoin: boolean) => {
-    console.log("lanchug the page");
-    if (canJoin) {
-      return (
-        <div>
-          <p>You are not in a chat with someone right now</p>
-          <p>Join someone here</p>
-          <button>
-            <Link href="/find">Jump in a chat now</Link>
-          </button>
-        </div>
-      );
-    }
-  };
-  // useEffect(() => {
-  //   console.log("getting something here");
-  //   socket.emit(EVENTS.CLIENT.REQUEST_JOIN, roomId);
-
-  //   socket.on(EVENTS.SERVER.REQUEST_JOIN_RESPONSE, (value: boolean) => {
-  //     joinRoomCallback(value);
-  //   });
-  // }, [roomId]);
-
-  // if (!roomId) {
-  //   //no server side validation i think which is bad which i need
-  //   //we should say if (roomId.getRedis.exists && username.getRedis.authorized)
-  //   //then show chat
-  //   //else show u are not authorized blank page
-  //   // router.push("/");
-  //   return (
-  //     <Container
-  //       // bgImage="url(https://media.giphy.com/media/iI9IY9XXl2eKmDpQMY/giphy.gif)"
-  //       // bgRepeat="no-repeat"
-  //       // bgSize="cover"
-  //       bgColor="#0A1A3C"
-  //       maxW="container.2xl"
-  //     >
-  //       <Center pt={4} px={4} minHeight="100vh">
-  //         <VStack>
-  //           <Container maxW="container.md" textAlign="center">
-  //             <Heading
-  //               fontFamily="inter"
-  //               fontWeight="extrabold"
-  //               size="4xl"
-  //               mb={4}
-  //               color="#F0F443"
-  //             >
-  //               Seems like you are not authorized to view this chat room
-  //             </Heading>
-
-  //             <Button
-  //               mt={8}
-  //               px={16}
-  //               borderRadius="1rem"
-  //               h="4em"
-  //               _hover={{
-  //                 bgColor: "#6DD9FF",
-  //               }}
-  //               bgColor="#43BBF4"
-  //               onClick={() => {
-  //                 Router.push({
-  //                   pathname: "/",
-  //                 });
-  //               }}
-  //             >
-  //               Go back
-  //             </Button>
-  //           </Container>
-  //         </VStack>
-  //       </Center>
-  //     </Container>
-  //   );
-  // }
   return (
     <Box minH="100vh" maxW="full" bgColor="#171A21">
       <Box h="fit-content" w="100%" bgColor="#0A1A3C" p="1em">
