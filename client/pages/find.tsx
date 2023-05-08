@@ -69,7 +69,6 @@ export default function Find() {
           //go to chat page
           router.push({
             pathname: "/chat",
-            query: { roomId: `${roomkey}` },
           });
         });
         // }, 5000);
@@ -85,7 +84,6 @@ export default function Find() {
           //go to chat page
           router.push({
             pathname: "/chat",
-            query: { roomId: `${roomkey}` },
           });
         });
       }

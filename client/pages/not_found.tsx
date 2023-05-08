@@ -1,22 +1,23 @@
 import { useRouter } from "next/router";
 import {
   Box,
+  Heading,
+  Modal,
+  Text,
+  Button,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
   Container,
   Center,
   VStack,
-  UnorderedList,
-  ListItem,
-  InputGroup,
-  InputRightElement,
-  Button,
-  Heading,
-  Text,
-  Textarea,
-  Input,
-  Stack,
-  Flex,
+  Spacer,
+  Spinner,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
-import Router from "next/router";
 export default function Custom404() {
   const router = useRouter();
 
@@ -38,11 +39,11 @@ export default function Custom404() {
               mb={4}
               color="#F0F443"
             >
-              404 Page Not Found
+              Seems like you are not authorized to view this chat room
             </Heading>
-
             <Button
               mt={8}
+              px={16}
               borderRadius="1rem"
               h="4em"
               _hover={{
@@ -50,12 +51,12 @@ export default function Custom404() {
               }}
               bgColor="#43BBF4"
               onClick={() => {
-                Router.push({
+                router.push({
                   pathname: "/",
                 });
               }}
             >
-              Return to Home page
+              Go back
             </Button>
           </Container>
         </VStack>

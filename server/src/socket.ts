@@ -5,6 +5,8 @@ import logger from "./utils/logger";
 import { formatAMPM } from "./utils/helpers";
 import { SocketAddress } from "net";
 import NodeCache from "node-cache";
+import c from "config";
+import { SERVFAIL } from "dns";
 
 //lifecycle of a chatroom => creation, both person join, one person leaves but the other can choose to stay
 //when last person leaves, chatroom is deleted. at any time, unregistered members cant join if their id or token
@@ -32,11 +34,26 @@ const EVENTS = {
     OTHER_USERNAME: "OTHER_USERNAME",
     DISCONNECTED: "DISCONNECTED",
     LEFT_YOU: "LEFT_YOU",
+    REQUEST_JOIN: "REQUEST_JOIN",
+    REQUEST_JOIN_RESPONSE: "REQUEST_JOIN_RESPONSE",
   },
 };
 
 const rooms: Record<string, { name: string }> = {}; //we can use array here too
 const cache = new NodeCache();
+
+function getCacheAsString(cache: NodeCache) {
+  let cacheToString = "Cache:\n";
+  // Get the keys of the cache
+  const keys = cache.keys();
+
+  // Iterate over the keys and access the corresponding values
+  for (const key of keys) {
+    const value: string[] | undefined = cache.get(key);
+    cacheToString += `${key}: [${value?.join(", ")}]\n`;
+  }
+  return cacheToString;
+}
 
 function socket({ io }: { io: Server }) {
   logger.info(`Sockets enabled`);
@@ -67,17 +84,14 @@ function socket({ io }: { io: Server }) {
           waitingRoomId
         )}`
       );
-
+      const cacheString = getCacheAsString(cache);
+      console.log(`The complete room cache now ${cacheString}`);
       try {
         const clientsInRoom = getSockets(io, waitingRoomId);
         clientsInRoom.then((client) => {
           //how many clients/users can i have in the wainting room? i need to support 15k
           // Do something with the resolved value
           const waitingUsers = client.map(({ id }) => id);
-          // console.log("upon trying to connect, we have the following list");
-          // console.log(waitingUsers);
-          // console.log("current user is ", socket.id);
-
           socket.emit(EVENTS.SERVER.JOINED_WAITING_ROOM, waitingUsers);
         });
       } catch (error) {
@@ -87,6 +101,7 @@ function socket({ io }: { io: Server }) {
     });
 
     socket.on(EVENTS.CLIENT.CONNECT_ME, (username) => {
+      console.log("cum");
       //when a user is in the waiting room waiting and requesting to be paired up
       const currentSocketId = socket.id;
       const sockets = getSockets(io, waitingRoomId);
@@ -99,8 +114,8 @@ function socket({ io }: { io: Server }) {
         if (otherSocket) {
           socket.join(newChatRoomId);
           otherSocket.join(newChatRoomId);
-          let dataAdd = [socket.id, otherSocket.id];
-          cache.set(newChatRoomId, dataAdd);
+          let newData1 = [socket.id, otherSocket.id];
+          cache.set(newChatRoomId, newData1);
           logger.info(`Created chat room with id ${newChatRoomId}`);
           logger.info(`Socket ${socket.id} joined room ${newChatRoomId}`);
           logger.info(`Socket ${otherSocket.id} joined room ${newChatRoomId}`);
@@ -112,11 +127,15 @@ function socket({ io }: { io: Server }) {
             `Socket ${otherSocket.id} left waiting room ${newChatRoomId}`
           );
 
-          let dataRemove: string[] | undefined = cache.get(waitingRoomId);
-          dataRemove?.filter((item) => item === socket.id);
-          dataRemove?.filter((item) => item === otherSocket.id);
-          cache.set(newChatRoomId, dataRemove);
+          const cacheString = getCacheAsString(cache);
+          console.log(`The complete room cache now ${cacheString}`);
 
+          let data: string[] | undefined = cache.get(waitingRoomId);
+          const newData2: string[] | undefined = data?.filter((element) => {
+            element !== socket.id && element !== otherSocket.id;
+          });
+
+          cache.set(waitingRoomId, newData2);
           rooms[currentSocketId] = {
             name: username,
           };
@@ -208,12 +227,16 @@ function socket({ io }: { io: Server }) {
     socket.on(EVENTS.CLIENT.DISCONNECT, ({ roomId, username }) => {
       //disconnect this socket from the room
       socket.leave(roomId);
+      let data: string[] | undefined = cache.get(roomId);
+      const newData = data?.filter((id) => id !== socket.id);
+      cache.set(roomId, newData);
       logger.info(
         `Socket ${
           socket.id
         } left the room ${roomId}. Room members now: ${cache.get(roomId)}`
       );
       socket.emit(EVENTS.SERVER.DISCONNECTED, roomId);
+
       const sockets = getSockets(io, roomId);
 
       //tell the other socket that their friend has left the room
@@ -225,8 +248,30 @@ function socket({ io }: { io: Server }) {
         if (otherSocket) {
           const date = new Date();
           socket.to(otherSocket.id).emit(EVENTS.SERVER.LEFT_YOU, username);
+        } else {
+          //room is empty after the second person leaving, so lets delete
+          //the room from the cache
+          cache.del(roomId);
+          logger.info(`Room ${roomId} deleted from cache`);
         }
       });
+    });
+
+    socket.on(EVENTS.SERVER.REQUEST_JOIN, (roomId) => {
+      console.log(roomId, typeof roomId);
+      const chatMembers: string[] | undefined = cache.get(roomId);
+      if (
+        chatMembers?.find((chatMemberId) => {
+          return JSON.stringify(chatMemberId) === JSON.stringify(socket.id);
+        })
+      ) {
+        console.log("verified", socket.id);
+        socket.emit(EVENTS.SERVER.REQUEST_JOIN_RESPONSE, true);
+      } else {
+        console.log("unverfied", socket.id);
+
+        socket.emit(EVENTS.SERVER.REQUEST_JOIN_RESPONSE, false);
+      }
     });
   });
 }
