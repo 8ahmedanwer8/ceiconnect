@@ -101,7 +101,6 @@ function socket({ io }: { io: Server }) {
     });
 
     socket.on(EVENTS.CLIENT.CONNECT_ME, (username) => {
-      console.log("cum");
       //when a user is in the waiting room waiting and requesting to be paired up
       const currentSocketId = socket.id;
       const sockets = getSockets(io, waitingRoomId);

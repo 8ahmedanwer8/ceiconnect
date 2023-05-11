@@ -120,9 +120,8 @@ function Messages() {
               </Box>
             );
           } else if (message == "LEFT") {
-            {
-              console.log("this one officer");
-            }
+            //TODO have a button right on the chat side which lets the user either
+            //also leave back to main room or find another person by going to /find
             return (
               <Box paddingBottom="1em" flex="1">
                 <Text

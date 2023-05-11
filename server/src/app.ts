@@ -6,12 +6,10 @@ import config from "config";
 import logger from "./utils/logger";
 import { version } from "../package.json";
 import socket from "./socket";
-import NodeCache from "node-cache";
 
 const port = config.get<number>("port");
 const host = config.get<string>("host");
 const corsOrigin = config.get<string>("corsOrigin");
-const cache = new NodeCache();
 
 const app = express();
 const httpServer = createServer(app);

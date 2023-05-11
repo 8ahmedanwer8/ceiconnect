@@ -14,7 +14,12 @@ import {
   Container,
   Center,
   Spinner,
+  HStack,
+  Stack,
+  Wrap,
   VStack,
+  ButtonGroup,
+  Button,
 } from "@chakra-ui/react";
 
 import { useState, useEffect } from "react";
@@ -38,6 +43,18 @@ export default function Find() {
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const options = ["No preference", "STEM", "Humanities", "Business", "Other"];
+
+  const [selectOwnPref, setSelectOwnPref] = useState(null);
+  const [selectPref, setSelectPref] = useState(null);
+
+  const handleOwnPref = (option) => {
+    setSelectOwnPref(option);
+  };
+
+  const handleSelectPref = (option) => {
+    setSelectPref(option);
+  };
 
   function findSomeone() {
     setLoading(true);
@@ -56,7 +73,7 @@ export default function Find() {
       if (otherWaitingUsers.length <= 1) {
         //theres nobody else besides this user on the app
         //add retry and waiting logic
-        setLoadingText("Looking for someone");
+        setLoadingText("Searching for someone");
 
         // const interval = setInterval(() => {
         //   setLoadingText("Looking for someone");
@@ -100,6 +117,36 @@ export default function Find() {
   }, [username]);
 
   return (
+    // <Container
+    //   // bgImage="url(https://media.giphy.com/media/iI9IY9XXl2eKmDpQMY/giphy.gif)"
+    //   // bgRepeat="no-repeat"
+    //   // bgSize="cover"
+    //   bgColor="#0B1A3C"
+    //   minHeight="100vh"
+    //   maxW="container.2xl"
+    //   display="flex"
+    //   justifyContent="center"
+    //   alignItems="center"
+    // >
+    //   {/*use different dimensions of loading screen for larger screens. maybe not too big. follow figma */}
+    //   <Box
+    //     bgColor="#171A21"
+    //     // justifyContent="center"
+    //     alignSelf="center"
+    //     w="80vw"
+    //     h="50vh"
+    //   >
+    //     <VStack>
+    //       <Text mt="4" mb="8" fontFamily="roboto" fontSize="xl" color="#FFFFFF">
+    //         {loadingText}
+    //       </Text>
+    //       <Spinner mb="4" boxSize={28} color="white"></Spinner>
+    //       <Text fontFamily="roboto" fontWeight="light" color="#FFF">
+    //         {tipText}
+    //       </Text>
+    //     </VStack>
+    //   </Box>
+    // </Container>
     <Container
       // bgImage="url(https://media.giphy.com/media/iI9IY9XXl2eKmDpQMY/giphy.gif)"
       // bgRepeat="no-repeat"
@@ -109,16 +156,117 @@ export default function Find() {
       maxW="container.2xl"
       display="flex"
       justifyContent="center"
-      alignItems="center"
+      // alignItems="center"
     >
       {/*use different dimensions of loading screen for larger screens. maybe not too big. follow figma */}
-      <Box bgColor="#171A21" w="80vw" h="50vh">
-        <VStack>
-          <Text mt="4" mb="8" fontFamily="roboto" fontSize="xl" color="#FFFFFF">
-            {loadingText}
-          </Text>
-          <Spinner boxSize={24} color="white"></Spinner>
-          <Text>{tipText}</Text>
+      <Box
+        bgColor="#171A21"
+        justifyContent="center"
+        alignSelf="center"
+        w={{ base: "70vw", md: "50vw", lg: "30vw" }}
+        h="fit-content"
+      >
+        <VStack mt="4" width="100%" textAlign="center">
+          <Box
+            textAlign="center"
+            justifyContent="center"
+            justifyItems="center"
+            w="100%"
+          >
+            <Text
+              fontFamily="roboto"
+              fontWeight="semibold"
+              fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
+              color="#FFF"
+            >
+              I am in
+            </Text>
+
+            <Box px="6" mt="4" mb="8" w="100%">
+              <Wrap alignItems="center" spacing="4">
+                {options.map((option) => (
+                  <Button
+                    key={option}
+                    w="fit-content"
+                    size={{ base: "sm", md: "md", lg: "lg" }}
+                    fontSize={{ base: "s", md: "md", lg: "lg" }}
+                    fontFamily="roboto"
+                    fontWeight="600"
+                    // colorScheme="twitter"
+                    _hover={{ bg: "#1da1f9" }}
+                    color="white"
+                    opacity={selectOwnPref === option ? "1" : "0.6"}
+                    bg={
+                      selectOwnPref === option
+                        ? "#00488A"
+                        : "rgba(67, 187, 244, 0.80)"
+                    }
+                    _active={{ bg: "white", borderBottomColor: "blue.400" }}
+                    onClick={() => handleOwnPref(option)}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </Wrap>
+            </Box>
+          </Box>
+          <Box
+            textAlign="center"
+            justifyContent="center"
+            justifyItems="center"
+            w="100%"
+          >
+            <Text
+              fontFamily="roboto"
+              fontWeight="semibold"
+              fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
+              color="#FFF"
+            >
+              I want
+            </Text>
+
+            <Box px="6" mt="4" mb="8" w="100%">
+              <Wrap alignItems="center" spacing="4">
+                {options.map((option) => (
+                  <Button
+                    key={option}
+                    w="fit-content"
+                    size={{ base: "sm", md: "md", lg: "lg" }}
+                    fontSize={{ base: "s", md: "md", lg: "lg" }}
+                    fontFamily="roboto"
+                    fontWeight="600"
+                    _hover={{ bg: "#1da1f9" }}
+                    color="white"
+                    opacity={selectPref === option ? "1" : "0.6"}
+                    bg={
+                      selectPref === option
+                        ? "#00488A"
+                        : "rgba(67, 187, 244, 0.80)"
+                    }
+                    _active={{ bg: "white", borderBottomColor: "blue.400" }}
+                    onClick={() => handleSelectPref(option)}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </Wrap>
+              <ButtonGroup mt="8">
+                <Button
+                  w="fit-content"
+                  size="md"
+                  fontSize="20px"
+                  as="i"
+                  fontFamily="inter"
+                  fontWeight="extrabold"
+                  bgGradient="linear(to-l, #F0F443, #FBD26A)"
+                  _hover={{ bgGradient: "linear(to-l, #FBD26A, #F0F443)" }}
+                  _active={{ bgGradient: "linear(to-l, #F0F443, #FBD26A)" }}
+                >
+                  SEARCH
+                </Button>
+              </ButtonGroup>
+            </Box>
+          </Box>
         </VStack>
       </Box>
     </Container>
