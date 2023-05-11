@@ -100,36 +100,36 @@ export default function Chat() {
   const warningText =
     "You have unsaved changes - are you sure you wish to leave this page?";
 
-  useEffect(() => {
-    if (roomId) {
-      const handleWindowClose = (e) => {
-        socket.close();
-        // handleDisconnect();
+  // useEffect(() => {
+  //   if (roomId) {
+  //     const handleWindowClose = (e) => {
+  //       socket.close();
+  //       // handleDisconnect();
 
-        if (!unsavedChanges) return;
-        e.preventDefault();
-        return (e.returnValue = warningText);
-      };
-      const handleBrowseAway = () => {
-        socket.close();
+  //       if (!unsavedChanges) return;
+  //       e.preventDefault();
+  //       return (e.returnValue = warningText);
+  //     };
+  //     const handleBrowseAway = () => {
+  //       socket.close();
 
-        handleDisconnect();
+  //       // handleDisconnect();
 
-        if (!unsavedChanges) return;
-        if (window.confirm(warningText)) return;
-        router.events.emit("routeChangeError");
-        throw "routeChange aborted.";
-      };
-      window.addEventListener("beforeunload", handleWindowClose);
-      router.events.on("routeChangeStart", handleBrowseAway);
-      return () => {
-        // handleDisconnect();
+  //       if (!unsavedChanges) return;
+  //       if (window.confirm(warningText)) return;
+  //       router.events.emit("routeChangeError");
+  //       throw "routeChange aborted.";
+  //     };
+  //     window.addEventListener("beforeunload", handleWindowClose);
+  //     router.events.on("routeChangeStart", handleBrowseAway);
+  //     return () => {
+  //       // handleDisconnect();
 
-        window.removeEventListener("beforeunload", handleWindowClose);
-        router.events.off("routeChangeStart", handleBrowseAway);
-      };
-    }
-  }, [unsavedChanges]);
+  //       window.removeEventListener("beforeunload", handleWindowClose);
+  //       router.events.off("routeChangeStart", handleBrowseAway);
+  //     };
+  //   }
+  // }, [unsavedChanges]);
 
   function disconnectUser() {
     //send message to server saying disconnect

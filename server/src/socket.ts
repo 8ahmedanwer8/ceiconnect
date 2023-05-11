@@ -71,11 +71,12 @@ function socket({ io }: { io: Server }) {
     socket.emit(EVENTS.SERVER.ROOMS, rooms);
 
     //when a user  wants to meet someone i.e. joins the waiting room
-    socket.on(EVENTS.CLIENT.NEW_WAITING, (username, preferences) => {
+    socket.on(EVENTS.CLIENT.NEW_WAITING, (preferences) => {
       rooms[waitingRoomId] = {
         name: "WAITING_ROOM",
       };
       socket.join(waitingRoomId);
+      console.log("the prefs", preferences);
       let data: string[] | undefined = cache.get(waitingRoomId);
       data?.push(socket.id);
       cache.set(waitingRoomId, data);
