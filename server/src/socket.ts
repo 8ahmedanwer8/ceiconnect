@@ -41,6 +41,7 @@ const EVENTS = {
 
 const rooms: Record<string, { name: string }> = {}; //we can use array here too
 const cache = new NodeCache();
+const userConnectionCache = new NodeCache();
 
 function getCacheAsString(cache: NodeCache) {
   let cacheToString = "Cache:\n";
@@ -77,6 +78,7 @@ function socket({ io }: { io: Server }) {
       };
       socket.join(waitingRoomId);
       console.log("the prefs", preferences);
+
       let data: string[] | undefined = cache.get(waitingRoomId);
       data?.push(socket.id);
       cache.set(waitingRoomId, data);
@@ -85,8 +87,10 @@ function socket({ io }: { io: Server }) {
           waitingRoomId
         )}`
       );
+
       const cacheString = getCacheAsString(cache);
       console.log(`The complete room cache now ${cacheString}`);
+
       try {
         const clientsInRoom = getSockets(io, waitingRoomId);
         clientsInRoom.then((client) => {
@@ -150,9 +154,9 @@ function socket({ io }: { io: Server }) {
             .to(otherSocket.id)
             .emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
 
-          socket
-            .to(otherSocket.id)
-            .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
+          // socket
+          //   .to(otherSocket.id)
+          //   .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
 
           socket.emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
           socket.emit(EVENTS.SERVER.CONNECTED, newChatRoomId);

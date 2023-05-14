@@ -34,6 +34,43 @@ import { useState, useEffect } from "react";
   -> and they will hit the else block on their side and connect with you using the CONNECT_ME msg
   else CONNECT_ME->	CONNECTED
   router.push to /chat/roomId
+
+  so if i join the waiting room, i first get joinedwaitingroom message with the 
+  number of waiting room members. if it is just me, then i wait for a socket.on connectedwithyou
+  else: there are other members as well so client sends a connectme message
+  to server and server connects me to the other person in the waiting room by sending them a connected with you
+  and sending ME a joined room message
+*/
+
+/*
+  I am using "type" to refer to the tuple that represents the preferences of a user
+  The X in (IS: X, WANTS X) means any preference including no preference.
+
+  - (IS: NO_PREF, WANTS: NO_PREF) and (IS: NO_PREF, WANTS: NO_PREF) then they match
+  first priority (random pool selection of their types).
+
+  - (IS: A, WANTS: NO_PREF) then they match with (IS: X, WANTS: A) first priority
+  and (IS: X, WANTS X) second priority and (IS: NO_PREF, WANTS: NO_PREF) third priority.
+
+  - (IS: NO_PREF, WANTS: A) then they match with (IS: A, WANTS: X) first priority
+  and (IS: X, WANTS: NO_PREF) second priority and (IS: NO_PREF, WANTS: NO_PREF) third
+
+  - (IS: A, WANTS: A) then they match with (IS: A, WANTS: A) first priority
+  and (IS: X, WANTS: A) second priority and (IS: NO_PREF, WANTS: NO_PREF) third
+
+  - (IS: A, WANTS: B) then they match first priority with (IS: B, WANTS: A) and
+  (IS: X, WANTS: A) second, (IS: NO_PREF, WANTS: NO_PREF) third.
+
+  first priority (random pool selection of their types).
+  - (IS: NO_PREF, WANTS: NO_PREF) and (IS: NO_PREF, WANTS: NO_PREF) then they match
+  - (IS: A, WANTS: B) and (IS: B, WANTS: A) then they match
+  - (IS: A, WANTS: B) and (IS: A, WANTS: C) wait until for a match to be found
+  otherwise match them up together or with someone lik
+  
+  so basically idea is u match with someone that u want and they want u,
+  else, they want u but u may not want them
+  else u get matched with no prefs
+
 */
 
 export default function Find() {
@@ -52,10 +89,16 @@ export default function Find() {
 
   const handleOwnPref = (option) => {
     setSelectOwnPref(option);
+    if (option === "No preference") {
+      setSelectPref("No preference");
+    }
   };
 
   const handleSelectPref = (option) => {
     setSelectPref(option);
+    if (option === "No preference") {
+      setSelectOwnPref("No preference");
+    }
   };
 
   function findSomeone() {
@@ -189,7 +232,7 @@ export default function Find() {
                       fontFamily="roboto"
                       fontWeight="600"
                       // colorScheme="twitter"
-                      _hover={{ bg: "#1da1f9" }}
+                      _hover={option !== selectOwnPref && { bg: "#1da1f9" }}
                       color="white"
                       opacity={selectOwnPref === option ? "1" : "0.6"}
                       bg={
@@ -197,7 +240,7 @@ export default function Find() {
                           ? "#00488A"
                           : "rgba(67, 187, 244, 0.80)"
                       }
-                      _active={{ bg: "white", borderBottomColor: "blue.400" }}
+                      _active={{ opacity: 0.3 }}
                       onClick={() => handleOwnPref(option)}
                     >
                       {option}
@@ -231,7 +274,7 @@ export default function Find() {
                       fontSize={{ base: "s", md: "md", lg: "lg" }}
                       fontFamily="roboto"
                       fontWeight="600"
-                      _hover={{ bg: "#1da1f9" }}
+                      _hover={option !== selectPref && { bg: "#1da1f9" }}
                       color="white"
                       opacity={selectPref === option ? "1" : "0.6"}
                       bg={
@@ -239,7 +282,7 @@ export default function Find() {
                           ? "#00488A"
                           : "rgba(67, 187, 244, 0.80)"
                       }
-                      _active={{ bg: "white", borderBottomColor: "blue.400" }}
+                      _active={{ opacity: 0.3 }}
                       onClick={() => handleSelectPref(option)}
                     >
                       {option}
