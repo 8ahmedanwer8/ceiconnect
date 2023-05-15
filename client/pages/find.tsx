@@ -108,9 +108,7 @@ export default function Find() {
       IS: selectOwnPref,
       WANTS: selectPref,
     };
-    socket.emit(EVENTS.CLIENT.NEW_WAITING, {
-      preferences,
-    });
+    socket.emit(EVENTS.CLIENT.NEW_WAITING, preferences);
 
     socket.on(EVENTS.SERVER.JOINED_WAITING_ROOM, (otherWaitingUsers) => {
       setLoadingText(`Found ${otherWaitingUsers.length} online`);
@@ -139,7 +137,7 @@ export default function Find() {
         // return () => clearInterval(interval);
       } else {
         setLoadingText("Found someone!");
-        socket.emit(EVENTS.CLIENT.CONNECT_ME, username);
+        socket.emit(EVENTS.CLIENT.CONNECT_ME, preferences);
         setLoadingText("Trying to connect with them");
 
         socket.on(EVENTS.SERVER.CONNECTED, (roomkey) => {

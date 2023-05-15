@@ -37,11 +37,35 @@ const EVENTS = {
     REQUEST_JOIN: "REQUEST_JOIN",
     REQUEST_JOIN_RESPONSE: "REQUEST_JOIN_RESPONSE",
   },
+  USER_CONNECTION: {
+    EXACT_MATCH: "EXACT_MATCH",
+    PARTIAL_MATCH: "PARTIAL_MATCH",
+    ANY_MATCH: "ANY_MATCH",
+    MATCHED_COMPLETE: "MATCHED_COMPLETE",
+  },
+  PREFERENCES: {
+    NO_PREFERENCES: "No preference",
+    STEM: "STEM",
+    HUMANITIES: "Humanities",
+    BUSINESS: "Business",
+    OTHER: "Other",
+  },
 };
 
 const rooms: Record<string, { name: string }> = {}; //we can use array here too
 const cache = new NodeCache();
 const userConnectionCache = new NodeCache();
+
+interface UserConnection {
+  id: string;
+  IS: string;
+  WANTS: string;
+  connection_status: string;
+}
+
+interface Cache {
+  [key: string]: string[];
+}
 
 function getCacheAsString(cache: NodeCache) {
   let cacheToString = "Cache:\n";
@@ -77,7 +101,12 @@ function socket({ io }: { io: Server }) {
         name: "WAITING_ROOM",
       };
       socket.join(waitingRoomId);
-      console.log("the prefs", preferences);
+      userConnectionCache.set(socket.id, {
+        id: socket.id,
+        IS: preferences.IS,
+        WANTS: preferences.WANTS,
+        connection_status: EVENTS.USER_CONNECTION.EXACT_MATCH,
+      } as UserConnection);
 
       let data: string[] | undefined = cache.get(waitingRoomId);
       data?.push(socket.id);
@@ -85,6 +114,12 @@ function socket({ io }: { io: Server }) {
       logger.info(
         `Socket ${socket.id} joined waiting room. Room members now: ${cache.get(
           waitingRoomId
+        )}`
+      );
+
+      logger.info(
+        `User Connection Cache: ${JSON.stringify(
+          userConnectionCache.get(socket.id)
         )}`
       );
 
@@ -105,19 +140,69 @@ function socket({ io }: { io: Server }) {
       }
     });
 
-    socket.on(EVENTS.CLIENT.CONNECT_ME, (username) => {
+    socket.on(EVENTS.CLIENT.CONNECT_ME, (preferences) => {
       //when a user is in the waiting room waiting and requesting to be paired up
       const currentSocketId = socket.id;
       const sockets = getSockets(io, waitingRoomId);
       sockets.then((socketList) => {
         const newChatRoomId = nanoid();
-        cache.set(newChatRoomId, []);
+
+        //search each socket.id in the conn cache
+        //find exact matches and put them in a group
+        //random select from the group and connect to that socket
+
+        const socketIds: string[] = socketList
+          .filter((socketData) => socketData.id !== socket.id)
+          .map((socketData) => socketData.id);
+        const exactMatches: string[] = [];
+        const partialMatches: string[] = [];
+        const anyMatches: string[] = [];
+
+        console.log(socketIds);
+        for (const id of socketIds) {
+          const socketStatus: UserConnection | undefined =
+            userConnectionCache.get(id);
+          console.log(socketStatus);
+
+          if (
+            socketStatus?.IS === preferences.WANTS &&
+            socketStatus?.WANTS === preferences.IS &&
+            socketStatus?.id
+          ) {
+            exactMatches.push(socketStatus.id);
+          } else if (
+            socketStatus?.WANTS === preferences.IS &&
+            socketStatus?.id
+          ) {
+            partialMatches.push(socketStatus.id);
+          } else {
+            if (socketStatus?.id) {
+              anyMatches.push(socketStatus.id);
+            }
+          }
+        }
+        console.log("exactMatches", exactMatches);
+        console.log("partialMatches", partialMatches);
+        console.log("anyMatches", anyMatches);
+
+        // const otherSocketId =
+        //   exactMatches.length > 0
+        //     ? exactMatches[0]
+        //     : partialMatches.length > 0
+        //     ? partialMatches[0]
+        //     : anyMatches.length > 0
+        //     ? anyMatches[0]
+        //     : null;
+        const otherSocketId = exactMatches.length > 0 ? exactMatches[0] : null;
         const otherSocket = socketList.find(
-          (socket) => socket.id !== currentSocketId
+          (socket) => socket.id === otherSocketId
         );
-        if (otherSocket) {
+
+        if (otherSocket && otherSocketId) {
+          const newChatRoomId = nanoid();
           socket.join(newChatRoomId);
           otherSocket.join(newChatRoomId);
+          cache.set(newChatRoomId, []);
           let newData1 = [socket.id, otherSocket.id];
           cache.set(newChatRoomId, newData1);
           logger.info(`Created chat room with id ${newChatRoomId}`);
@@ -140,9 +225,9 @@ function socket({ io }: { io: Server }) {
           });
 
           cache.set(waitingRoomId, newData2);
-          rooms[currentSocketId] = {
-            name: username,
-          };
+          // rooms[currentSocketId] = {
+          //   name: username,
+          // };
 
           socket.broadcast.emit(EVENTS.SERVER.ROOMS, rooms);
 
