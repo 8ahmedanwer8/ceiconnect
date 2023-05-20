@@ -38,10 +38,10 @@ const EVENTS = {
     REQUEST_JOIN_RESPONSE: "REQUEST_JOIN_RESPONSE",
   },
   USER_CONNECTION: {
-    EXACT_MATCH: "EXACT_MATCH",
-    PARTIAL_MATCH: "PARTIAL_MATCH",
-    ANY_MATCH: "ANY_MATCH",
-    MATCHED_COMPLETE: "MATCHED_COMPLETE",
+    EXACT_MATCH: "EXACT_MATCH", //a wants b and b wants a
+    PARTIAL_MATCH: "PARTIAL_MATCH", //a wants b and b wants c
+    FREE_MATCH: "FREE_MATCH", // a wants b and no pref wants no pref
+    NO_MATCH: "NO_MATCH", //refers to people that couldnt find any matches at all
   },
   PREFERENCES: {
     NO_PREFERENCES: "No preference",
@@ -60,11 +60,19 @@ interface UserConnection {
   id: string;
   IS: string;
   WANTS: string;
-  connection_status: string;
+  connection_type: string;
+  connected: boolean;
 }
 
 interface Cache {
   [key: string]: string[];
+}
+
+interface Matches {
+  exact: string[];
+  partial: string[];
+  free: string[];
+  none: string[];
 }
 
 function getCacheAsString(cache: NodeCache) {
@@ -80,15 +88,88 @@ function getCacheAsString(cache: NodeCache) {
   return cacheToString;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function getSockets(io: Server, id: string) {
+  const sockets = await io.in(id).fetchSockets();
+  return sockets;
+}
+
+async function getMatches(
+  io: Server,
+  preferences: any,
+  socketId: string,
+  waitingRoomId: string
+) {
+  try {
+    const socketList = await getSockets(io, waitingRoomId);
+    const exactMatches: string[] = [];
+    const partialMatches: string[] = [];
+    const freeMatches: string[] = [];
+    const noMatches: string[] = [];
+
+    const socketIds: string[] = socketList
+      .filter((socketData) => socketData.id !== socketId)
+      .map((socketData) => socketData.id);
+
+    for (const id of socketIds) {
+      const socketStatus: UserConnection | undefined =
+        userConnectionCache.get(id);
+
+      if (
+        socketStatus?.IS === preferences.WANTS &&
+        socketStatus?.WANTS === preferences.IS &&
+        socketStatus?.id
+      ) {
+        exactMatches.push(socketStatus.id);
+      } else if (socketStatus?.WANTS === preferences.IS && socketStatus?.id) {
+        partialMatches.push(socketStatus.id);
+      } else if (
+        socketStatus?.WANTS == EVENTS.PREFERENCES.NO_PREFERENCES &&
+        socketStatus?.IS == EVENTS.PREFERENCES.NO_PREFERENCES &&
+        socketStatus?.id
+      ) {
+        freeMatches.push(socketStatus.id);
+      } else {
+        if (socketStatus?.id) {
+          noMatches.push(socketStatus.id);
+        }
+      }
+    }
+
+    const matches: Matches = {
+      exact: exactMatches,
+      partial: partialMatches,
+      free: freeMatches,
+      none: noMatches,
+    };
+    console.log(matches);
+
+    return matches;
+  } catch (error) {
+    console.error("Error", error);
+    const matches: Matches = {
+      exact: [],
+      partial: [],
+      free: [],
+      none: [],
+    };
+    return matches;
+  }
+}
+
 function socket({ io }: { io: Server }) {
   logger.info(`Sockets enabled`);
   const waitingRoomId = nanoid();
   cache.set(waitingRoomId, []);
 
-  const getSockets = async (io: Server, id: string) => {
-    const sockets = await io.in(id).fetchSockets();
-    return sockets;
-  };
+  async function delay() {
+    await sleep(5000);
+  }
 
   io.on(EVENTS.connection, (socket: Socket) => {
     logger.info(`User connected ${socket.id}`);
@@ -105,7 +186,8 @@ function socket({ io }: { io: Server }) {
         id: socket.id,
         IS: preferences.IS,
         WANTS: preferences.WANTS,
-        connection_status: EVENTS.USER_CONNECTION.EXACT_MATCH,
+        connection_type: EVENTS.USER_CONNECTION.EXACT_MATCH,
+        connected: false,
       } as UserConnection);
 
       let data: string[] | undefined = cache.get(waitingRoomId);
@@ -142,62 +224,60 @@ function socket({ io }: { io: Server }) {
 
     socket.on(EVENTS.CLIENT.CONNECT_ME, (preferences) => {
       //when a user is in the waiting room waiting and requesting to be paired up
-      const currentSocketId = socket.id;
       const sockets = getSockets(io, waitingRoomId);
-      sockets.then((socketList) => {
-        const newChatRoomId = nanoid();
-
-        //search each socket.id in the conn cache
-        //find exact matches and put them in a group
-        //random select from the group and connect to that socket
-
-        const socketIds: string[] = socketList
-          .filter((socketData) => socketData.id !== socket.id)
-          .map((socketData) => socketData.id);
-        const exactMatches: string[] = [];
-        const partialMatches: string[] = [];
-        const anyMatches: string[] = [];
-
-        console.log(socketIds);
-        for (const id of socketIds) {
-          const socketStatus: UserConnection | undefined =
-            userConnectionCache.get(id);
-          console.log(socketStatus);
-
-          if (
-            socketStatus?.IS === preferences.WANTS &&
-            socketStatus?.WANTS === preferences.IS &&
-            socketStatus?.id
-          ) {
-            exactMatches.push(socketStatus.id);
-          } else if (
-            socketStatus?.WANTS === preferences.IS &&
-            socketStatus?.id
-          ) {
-            partialMatches.push(socketStatus.id);
-          } else {
-            if (socketStatus?.id) {
-              anyMatches.push(socketStatus.id);
-            }
-          }
-        }
-        console.log("exactMatches", exactMatches);
-        console.log("partialMatches", partialMatches);
-        console.log("anyMatches", anyMatches);
-
-        // const otherSocketId =
-        //   exactMatches.length > 0
-        //     ? exactMatches[0]
-        //     : partialMatches.length > 0
-        //     ? partialMatches[0]
-        //     : anyMatches.length > 0
-        //     ? anyMatches[0]
-        //     : null;
-        const otherSocketId = exactMatches.length > 0 ? exactMatches[0] : null;
-        const otherSocket = socketList.find(
-          (socket) => socket.id === otherSocketId
+      let retryCount = 0;
+      var otherSocket: any = null;
+      var otherSocketId: string | null = null;
+      const matchAndRetry = async () => {
+        const matches = await getMatches(
+          io,
+          preferences,
+          socket.id,
+          waitingRoomId
         );
+        console.log("exactMatches", matches.exact);
+        console.log("partialMatches", matches.partial);
+        console.log("freeMatches", matches.free);
+        console.log("noMatches", matches.none);
 
+        if (matches.exact.length === 0 && retryCount < 3) {
+          retryCount++;
+          console.log(
+            "No exact matches found. Retrying (Attempt " + retryCount + ")..."
+          );
+          await delay(); // Delay before retrying
+
+          // Call the function recursively
+          await matchAndRetry();
+        } else if (matches.exact.length === 0 && retryCount === 3) {
+          console.log("No exact matches found after 3 retries.");
+          console.log("Finding something else");
+          otherSocketId =
+            matches.exact.length > 0
+              ? matches.exact[0]
+              : matches.partial.length > 0
+              ? matches.partial[0]
+              : matches.free.length > 0
+              ? matches.free[0]
+              : matches.none.length > 0
+              ? matches.none[0]
+              : matches.none[0];
+          const socketList = await sockets;
+          otherSocket = socketList.find(
+            (socket) => socket.id === otherSocketId
+          );
+        } else {
+          // Handle the case when no matches are found after 3 retries
+          otherSocketId = matches.exact[0];
+          const socketList = await sockets;
+          otherSocket = socketList.find(
+            (socket) => socket.id === otherSocketId
+          );
+        }
+      };
+
+      (async () => {
+        await matchAndRetry();
         if (otherSocket && otherSocketId) {
           const newChatRoomId = nanoid();
           socket.join(newChatRoomId);
@@ -239,14 +319,101 @@ function socket({ io }: { io: Server }) {
             .to(otherSocket.id)
             .emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
 
-          // socket
-          //   .to(otherSocket.id)
-          //   .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
+          socket
+            .to(otherSocket.id)
+            .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
 
           socket.emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
           socket.emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
         }
-      });
+      })();
+
+      // const matches = getMatches(io, preferences, socket.id, waitingRoomId);
+      // matches.then((res: Matches) => {
+      //   console.log("exactMatches", res.exact);
+      //   console.log("partialMatches", res.partial);
+      //   console.log("freeMatches", res.free);
+      //   console.log("noMatches", res.none);
+      // exactmatch not found
+      // retry: send emit that we are retrying
+      // actually retry
+      // try to find exact match but if not,
+      //find the next greatest
+
+      // const otherSocketId =
+      //   res.exact.length > 0
+      //     ? res.exact[0]
+      //     : res.partial.length > 0
+      //     ? res.partial[0]
+      //     : res.free.length > 0
+      //     ? res.free[0]
+      //     : null;
+
+      //   const otherSocketId = res.exact.length > 0 ? res.exact[0] : null;
+      //   console.log(sockets.length);
+
+      //   if (res.exact.length == 0) {
+      //     delay().then(() => {
+      //       socket.emit("SEARCH_RETRY");
+      //       const sockets = getSockets(io, waitingRoomId);
+      //       sockets.then((list) => {
+      //         const newIds: string[] = list
+      //           .filter((socketData) => socketData.id !== socket.id)
+      //           .map((socketData) => socketData.id);
+      //         console.log(newIds.length);
+      //       });
+      //     });
+      //   }
+      // });
+      // console.log(otherSocket, otherSocketId);
+      // if (otherSocket && otherSocketId) {
+      //   const newChatRoomId = nanoid();
+      //   socket.join(newChatRoomId);
+      //   otherSocket.join(newChatRoomId);
+      //   cache.set(newChatRoomId, []);
+      //   let newData1 = [socket.id, otherSocket.id];
+      //   cache.set(newChatRoomId, newData1);
+      //   logger.info(`Created chat room with id ${newChatRoomId}`);
+      //   logger.info(`Socket ${socket.id} joined room ${newChatRoomId}`);
+      //   logger.info(`Socket ${otherSocket.id} joined room ${newChatRoomId}`);
+
+      //   socket.leave(waitingRoomId);
+      //   otherSocket.leave(waitingRoomId);
+      //   logger.info(`Socket ${socket.id} left waiting room ${newChatRoomId}`);
+      //   logger.info(
+      //     `Socket ${otherSocket.id} left waiting room ${newChatRoomId}`
+      //   );
+
+      //   const cacheString = getCacheAsString(cache);
+      //   console.log(`The complete room cache now ${cacheString}`);
+
+      //   let data: string[] | undefined = cache.get(waitingRoomId);
+      //   const newData2: string[] | undefined = data?.filter((element) => {
+      //     element !== socket.id && element !== otherSocket.id;
+      //   });
+
+      //   cache.set(waitingRoomId, newData2);
+      //   // rooms[currentSocketId] = {
+      //   //   name: username,
+      //   // };
+
+      //   socket.broadcast.emit(EVENTS.SERVER.ROOMS, rooms);
+
+      //   socket
+      //     .to(otherSocket.id)
+      //     .emit(EVENTS.SERVER.CONNECTEDWITHYOU, newChatRoomId);
+
+      //   socket
+      //     .to(otherSocket.id)
+      //     .emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
+
+      //   // socket
+      //   //   .to(otherSocket.id)
+      //   //   .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
+
+      //   socket.emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
+      //   socket.emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
+      // }
     });
 
     socket.on(EVENTS.CLIENT.MY_USERNAME, (data) => {
@@ -347,18 +514,14 @@ function socket({ io }: { io: Server }) {
     });
 
     socket.on(EVENTS.SERVER.REQUEST_JOIN, (roomId) => {
-      console.log(roomId, typeof roomId);
       const chatMembers: string[] | undefined = cache.get(roomId);
       if (
         chatMembers?.find((chatMemberId) => {
           return JSON.stringify(chatMemberId) === JSON.stringify(socket.id);
         })
       ) {
-        console.log("verified", socket.id);
         socket.emit(EVENTS.SERVER.REQUEST_JOIN_RESPONSE, true);
       } else {
-        console.log("unverfied", socket.id);
-
         socket.emit(EVENTS.SERVER.REQUEST_JOIN_RESPONSE, false);
       }
     });
