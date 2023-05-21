@@ -42,6 +42,7 @@ const EVENTS = {
     PARTIAL_MATCH: "PARTIAL_MATCH", //a wants b and b wants c
     FREE_MATCH: "FREE_MATCH", // a wants b and no pref wants no pref
     NO_MATCH: "NO_MATCH", //refers to people that couldnt find any matches at all
+    SEARCHING: "SEARCHING",
   },
   PREFERENCES: {
     NO_PREFERENCES: "No preference",
@@ -64,9 +65,9 @@ interface UserConnection {
   connected: boolean;
 }
 
-interface Cache {
-  [key: string]: string[];
-}
+// interface Cache {
+//   [key: string]: string[];
+// }
 
 interface Matches {
   exact: string[];
@@ -147,7 +148,6 @@ async function getMatches(
       free: freeMatches,
       none: noMatches,
     };
-    console.log(matches);
 
     return matches;
   } catch (error) {
@@ -164,7 +164,7 @@ async function getMatches(
 
 function socket({ io }: { io: Server }) {
   logger.info(`Sockets enabled`);
-  const waitingRoomId = nanoid();
+  const waitingRoomId = "WAITING_ROOM_" + nanoid();
   cache.set(waitingRoomId, []);
 
   async function delay() {
@@ -186,7 +186,7 @@ function socket({ io }: { io: Server }) {
         id: socket.id,
         IS: preferences.IS,
         WANTS: preferences.WANTS,
-        connection_type: EVENTS.USER_CONNECTION.EXACT_MATCH,
+        connection_type: EVENTS.USER_CONNECTION.SEARCHING,
         connected: false,
       } as UserConnection);
 
@@ -196,12 +196,6 @@ function socket({ io }: { io: Server }) {
       logger.info(
         `Socket ${socket.id} joined waiting room. Room members now: ${cache.get(
           waitingRoomId
-        )}`
-      );
-
-      logger.info(
-        `User Connection Cache: ${JSON.stringify(
-          userConnectionCache.get(socket.id)
         )}`
       );
 
@@ -218,7 +212,7 @@ function socket({ io }: { io: Server }) {
         });
       } catch (error) {
         //will think about sending error emit back later...
-        console.log(`Failed to find users in waiting room. Error: ${error}`);
+        console.error(`Failed to find users in waiting room. Error: ${error}`);
       }
     });
 
@@ -228,30 +222,44 @@ function socket({ io }: { io: Server }) {
       let retryCount = 0;
       var otherSocket: any = null;
       var otherSocketId: string | null = null;
+
+      logger.info(`Started searching matches for ${socket.id}`);
+      logger.info(
+        `User Connection Cache for ${socket.id}: ${JSON.stringify(
+          userConnectionCache.get(socket.id)
+        )}`
+      );
+
       const matchAndRetry = async () => {
+        console.log(otherSocket, otherSocketId);
+        // if (otherSocket && otherSocketId) {
+        //   return;
+        // }
+
         const matches = await getMatches(
           io,
           preferences,
           socket.id,
           waitingRoomId
         );
-        console.log("exactMatches", matches.exact);
-        console.log("partialMatches", matches.partial);
-        console.log("freeMatches", matches.free);
-        console.log("noMatches", matches.none);
+
+        logger.info(
+          `Matches found for ${socket.id}. Exact:${matches.exact} Partial:${matches.partial} Free:${matches.free} Unmatches:${matches.none}`
+        );
 
         if (matches.exact.length === 0 && retryCount < 3) {
           retryCount++;
-          console.log(
-            "No exact matches found. Retrying (Attempt " + retryCount + ")..."
+          logger.info(
+            `No exact matches found for ${socket.id}. Retrying (Attempt ${retryCount})...`
           );
-          await delay(); // Delay before retrying
 
-          // Call the function recursively
+          await delay();
           await matchAndRetry();
         } else if (matches.exact.length === 0 && retryCount === 3) {
-          console.log("No exact matches found after 3 retries.");
-          console.log("Finding something else");
+          logger.info(
+            `No exact matches found for ${socket.id} after 3 retries.`
+          );
+
           otherSocketId =
             matches.exact.length > 0
               ? matches.exact[0]
@@ -261,14 +269,21 @@ function socket({ io }: { io: Server }) {
               ? matches.free[0]
               : matches.none.length > 0
               ? matches.none[0]
-              : matches.none[0];
-          const socketList = await sockets;
-          otherSocket = socketList.find(
-            (socket) => socket.id === otherSocketId
-          );
+              : null;
+          if (otherSocketId) {
+            const socketList = await sockets;
+            otherSocket = socketList.find(
+              (socket) => socket.id === otherSocketId
+            );
+          } else {
+            logger.info(`No matches found at all for ${socket.id}`);
+            logger.info(`Navigating ${socket.id} to GPT`);
+          }
         } else {
-          // Handle the case when no matches are found after 3 retries
           otherSocketId = matches.exact[0];
+          logger.info(
+            `Found exact match for ${socket.id} with ${otherSocketId}`
+          );
           const socketList = await sockets;
           otherSocket = socketList.find(
             (socket) => socket.id === otherSocketId
@@ -282,32 +297,36 @@ function socket({ io }: { io: Server }) {
           const newChatRoomId = nanoid();
           socket.join(newChatRoomId);
           otherSocket.join(newChatRoomId);
+
+          //caching users joining the new chat room
           cache.set(newChatRoomId, []);
           let newData1 = [socket.id, otherSocket.id];
           cache.set(newChatRoomId, newData1);
-          logger.info(`Created chat room with id ${newChatRoomId}`);
+
+          //logging that users have joined the new chatroom
+          logger.info(`Created chat room with ID ${newChatRoomId}`);
           logger.info(`Socket ${socket.id} joined room ${newChatRoomId}`);
           logger.info(`Socket ${otherSocket.id} joined room ${newChatRoomId}`);
 
+          //users leave the waiting room
           socket.leave(waitingRoomId);
           otherSocket.leave(waitingRoomId);
-          logger.info(`Socket ${socket.id} left waiting room ${newChatRoomId}`);
+
+          //logging that users have left the waiting room
+          logger.info(`Socket ${socket.id} left waiting room ${waitingRoomId}`);
           logger.info(
-            `Socket ${otherSocket.id} left waiting room ${newChatRoomId}`
+            `Socket ${otherSocket.id} left waiting room ${waitingRoomId}`
           );
 
-          const cacheString = getCacheAsString(cache);
-          console.log(`The complete room cache now ${cacheString}`);
-
+          //removing these users from the waiting room cache
           let data: string[] | undefined = cache.get(waitingRoomId);
           const newData2: string[] | undefined = data?.filter((element) => {
             element !== socket.id && element !== otherSocket.id;
           });
-
           cache.set(waitingRoomId, newData2);
-          // rooms[currentSocketId] = {
-          //   name: username,
-          // };
+
+          const cacheString = getCacheAsString(cache);
+          console.debug(`\nThe complete room cache now ${cacheString}`);
 
           socket.broadcast.emit(EVENTS.SERVER.ROOMS, rooms);
 
@@ -327,93 +346,6 @@ function socket({ io }: { io: Server }) {
           socket.emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
         }
       })();
-
-      // const matches = getMatches(io, preferences, socket.id, waitingRoomId);
-      // matches.then((res: Matches) => {
-      //   console.log("exactMatches", res.exact);
-      //   console.log("partialMatches", res.partial);
-      //   console.log("freeMatches", res.free);
-      //   console.log("noMatches", res.none);
-      // exactmatch not found
-      // retry: send emit that we are retrying
-      // actually retry
-      // try to find exact match but if not,
-      //find the next greatest
-
-      // const otherSocketId =
-      //   res.exact.length > 0
-      //     ? res.exact[0]
-      //     : res.partial.length > 0
-      //     ? res.partial[0]
-      //     : res.free.length > 0
-      //     ? res.free[0]
-      //     : null;
-
-      //   const otherSocketId = res.exact.length > 0 ? res.exact[0] : null;
-      //   console.log(sockets.length);
-
-      //   if (res.exact.length == 0) {
-      //     delay().then(() => {
-      //       socket.emit("SEARCH_RETRY");
-      //       const sockets = getSockets(io, waitingRoomId);
-      //       sockets.then((list) => {
-      //         const newIds: string[] = list
-      //           .filter((socketData) => socketData.id !== socket.id)
-      //           .map((socketData) => socketData.id);
-      //         console.log(newIds.length);
-      //       });
-      //     });
-      //   }
-      // });
-      // console.log(otherSocket, otherSocketId);
-      // if (otherSocket && otherSocketId) {
-      //   const newChatRoomId = nanoid();
-      //   socket.join(newChatRoomId);
-      //   otherSocket.join(newChatRoomId);
-      //   cache.set(newChatRoomId, []);
-      //   let newData1 = [socket.id, otherSocket.id];
-      //   cache.set(newChatRoomId, newData1);
-      //   logger.info(`Created chat room with id ${newChatRoomId}`);
-      //   logger.info(`Socket ${socket.id} joined room ${newChatRoomId}`);
-      //   logger.info(`Socket ${otherSocket.id} joined room ${newChatRoomId}`);
-
-      //   socket.leave(waitingRoomId);
-      //   otherSocket.leave(waitingRoomId);
-      //   logger.info(`Socket ${socket.id} left waiting room ${newChatRoomId}`);
-      //   logger.info(
-      //     `Socket ${otherSocket.id} left waiting room ${newChatRoomId}`
-      //   );
-
-      //   const cacheString = getCacheAsString(cache);
-      //   console.log(`The complete room cache now ${cacheString}`);
-
-      //   let data: string[] | undefined = cache.get(waitingRoomId);
-      //   const newData2: string[] | undefined = data?.filter((element) => {
-      //     element !== socket.id && element !== otherSocket.id;
-      //   });
-
-      //   cache.set(waitingRoomId, newData2);
-      //   // rooms[currentSocketId] = {
-      //   //   name: username,
-      //   // };
-
-      //   socket.broadcast.emit(EVENTS.SERVER.ROOMS, rooms);
-
-      //   socket
-      //     .to(otherSocket.id)
-      //     .emit(EVENTS.SERVER.CONNECTEDWITHYOU, newChatRoomId);
-
-      //   socket
-      //     .to(otherSocket.id)
-      //     .emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
-
-      //   // socket
-      //   //   .to(otherSocket.id)
-      //   //   .emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
-
-      //   socket.emit(EVENTS.SERVER.JOINED_ROOM, newChatRoomId);
-      //   socket.emit(EVENTS.SERVER.CONNECTED, newChatRoomId);
-      // }
     });
 
     socket.on(EVENTS.CLIENT.MY_USERNAME, (data) => {
@@ -493,9 +425,8 @@ function socket({ io }: { io: Server }) {
       );
       socket.emit(EVENTS.SERVER.DISCONNECTED, roomId);
 
-      const sockets = getSockets(io, roomId);
-
       //tell the other socket that their friend has left the room
+      const sockets = getSockets(io, roomId);
       sockets.then((socketList) => {
         const currentSocketId = socket.id;
         const otherSocket = socketList.find(
