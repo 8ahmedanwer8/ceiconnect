@@ -40,6 +40,7 @@ export default function Chat() {
       if (as !== router.asPath) {
         onOpen();
       }
+      return null; //had to add this because i was getting a type error for returning void on beforePopSa
     });
 
     return () => {
@@ -232,7 +233,7 @@ export default function Chat() {
       <Box maxW="full" px="1em" py="1em">
         <Box bgColor="#171721" w="100%" h="100%">
           <Messages></Messages>
-          <Modal isLoading={loading} isOpen={isOpen} onClose={onClose}>
+          <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
             <ModalContent p="4" position="absolute" top="20%" bg="#171A21">
               <ModalCloseButton color="white"></ModalCloseButton>

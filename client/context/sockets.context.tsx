@@ -4,13 +4,21 @@ import { SOCKET_URL } from "../config/default";
 import EVENTS from "../config/events";
 import { generateRandomUsername } from "../utils/helpers";
 
+interface crappyUsernameInterface {
+  current: string;
+}
+
 interface Context {
   socket: Socket;
   roomId?: string;
-  otherUsername?: object; //name of the person user is talking to
-  username?: object;
+  otherUsername?: crappyUsernameInterface; //name of the person user is talking to
+  username?: crappyUsernameInterface; //see messages.tsx for more details on crappy interface
   rooms: object;
-  messages?: { message: string; time: string; username: string }[];
+  messages?: {
+    message: string;
+    time: string;
+    username: string;
+  }[];
   setMessages: Function;
 }
 

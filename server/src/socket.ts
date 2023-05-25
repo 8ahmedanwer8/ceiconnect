@@ -434,7 +434,9 @@ function socket({ io }: { io: Server }) {
         );
         if (otherSocket) {
           const date = new Date();
-          socket.to(otherSocket.id).emit(EVENTS.SERVER.LEFT_YOU, username);
+          socket
+            .to(otherSocket.id)
+            .emit(EVENTS.SERVER.LEFT_YOU, username.current);
         } else {
           //room is empty after the second person leaving, so lets delete
           //the room from the cache

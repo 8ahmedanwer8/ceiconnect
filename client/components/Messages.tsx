@@ -84,7 +84,7 @@ function Messages() {
           console.log(typeof username, typeof `You (${usernameString})`);
           if (username === `You (${usernameString})`) {
             return (
-              <Box paddingBottom="1em" flex="1">
+              <Box key={index} paddingBottom="1em" flex="1">
                 <Text
                   style={{ wordWrap: "break-word" }}
                   fontFamily="inter"
@@ -123,7 +123,7 @@ function Messages() {
             //TODO have a button right on the chat side which lets the user either
             //also leave back to main room or find another person by going to /find
             return (
-              <Box paddingBottom="1em" flex="1">
+              <Box key={index} paddingBottom="1em" flex="1">
                 <Text
                   as="i"
                   fontFamily="inter"
@@ -132,14 +132,14 @@ function Messages() {
                   key={index}
                   textAlign="center"
                 >
-                  {username.current} disconnected from the chat
+                  {username} disconnected from the chat
                 </Text>
                 <div ref={messageEndRef}></div>
               </Box>
             );
           } else {
             return (
-              <Box paddingBottom="1em" flex="1">
+              <Box key={index} paddingBottom="1em" flex="1">
                 <Text
                   fontFamily="inter"
                   fontSize="sm"
@@ -189,7 +189,7 @@ function Messages() {
       >
         <InputGroup size="md" flexGrow={1}>
           <Input
-            autoFocus="true"
+            autoFocus={true}
             bgColor="#D9D9D9"
             onKeyDown={handleKeyDown}
             ref={newMessageRef}
