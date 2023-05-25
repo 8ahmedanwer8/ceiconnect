@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import EVENTS from "../config/events";
 import { formatAMPM } from "../utils/helpers";
 import SendIcon from "../../client/public/send-icon.svg";
-import Image from "next/image";
 import { Box, InputGroup, Text, Input } from "@chakra-ui/react";
 function Messages() {
   const { socket, messages, roomId, username, setMessages } = useSockets();

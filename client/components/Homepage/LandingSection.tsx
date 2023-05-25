@@ -1,20 +1,13 @@
 import Router from "next/router";
 import {
-  Box,
   Container,
   Center,
   VStack,
   UnorderedList,
   ListItem,
-  InputGroup,
-  InputRightElement,
   Button,
   Heading,
   Text,
-  Textarea,
-  Input,
-  Stack,
-  Flex,
 } from "@chakra-ui/react";
 function LandingSection() {
   return (

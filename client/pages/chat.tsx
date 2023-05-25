@@ -1,11 +1,8 @@
 import { Inter } from "@next/font/google";
-import styles from "../styles/Home.module.css";
 import { useSockets } from "../context/sockets.context";
 const inter = Inter({ subsets: ["latin"] });
 import EVENTS from "../config/events";
 import Messages from "../components/Messages";
-import Router from "next/router";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import {

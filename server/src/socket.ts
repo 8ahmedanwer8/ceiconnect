@@ -1,12 +1,8 @@
-import { IOType } from "child_process";
 import { nanoid } from "nanoid";
 import { Server, Socket } from "socket.io";
 import logger from "./utils/logger";
 import { formatAMPM } from "./utils/helpers";
-import { SocketAddress } from "net";
 import NodeCache from "node-cache";
-import c from "config";
-import { SERVFAIL } from "dns";
 
 //lifecycle of a chatroom => creation, both person join, one person leaves but the other can choose to stay
 //when last person leaves, chatroom is deleted. at any time, unregistered members cant join if their id or token
