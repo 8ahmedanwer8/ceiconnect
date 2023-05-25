@@ -49,10 +49,10 @@ import { useState, useEffect } from "react";
   - (IS: NO_PREF, WANTS: NO_PREF) and (IS: NO_PREF, WANTS: NO_PREF) then they match
   first priority (random pool selection of their types).
 
-  - (IS: A, WANTS: NO_PREF) then they match with (IS: X, WANTS: A) first priority
-  and (IS: X, WANTS X) second priority and (IS: NO_PREF, WANTS: NO_PREF) third priority.
+  - (IS: A, WANTS: NO_PREF) then they match with (IS: NO_PREF, WANTS: A) first priority
+  and (IS: X, WANTS: A) second priority and (IS: NO_PREF, WANTS: NO_PREF) third priority.
 
-  - (IS: NO_PREF, WANTS: A) then they match with (IS: A, WANTS: X) first priority
+  - (IS: NO_PREF, WANTS: A) then they match with (IS: A, WANTS: NO_PREF) first priority
   and (IS: X, WANTS: NO_PREF) second priority and (IS: NO_PREF, WANTS: NO_PREF) third
 
   - (IS: A, WANTS: A) then they match with (IS: A, WANTS: A) first priority
@@ -71,11 +71,20 @@ import { useState, useEffect } from "react";
   else, they want u but u may not want them
   else u get matched with no prefs
 
+  a,b E
+  c,d 
+  isnt fair to pair a and c
+  eventually they end up in status D. new person joins
+
+  - weshould ADD A 4TH STATUS for basically types that dont
+  match with anything like a,b and c,d and there are none no prefs around
+  so you just gotta mix and match ppl
+
 */
 
 export default function Find() {
   const { socket, rooms, username, roomId } = useSockets();
-  const [loadingText, setLoadingText] = useState("I am loading text");
+  const [loadingText, setLoadingText] = useState("Loading text");
   const [tipText, setTipText] = useState("I am loading text");
 
   const [finding, setFinding] = useState(false);
@@ -89,56 +98,47 @@ export default function Find() {
 
   const handleOwnPref = (option) => {
     setSelectOwnPref(option);
-    if (option === "No preference") {
-      setSelectPref("No preference");
-    }
   };
 
   const handleSelectPref = (option) => {
     setSelectPref(option);
-    if (option === "No preference") {
-      setSelectOwnPref("No preference");
-    }
   };
-
-  function findSomeone() {
-    setFinding(true);
-    setLoading(true);
-    const preferences = {
-      IS: selectOwnPref,
-      WANTS: selectPref,
-    };
-    socket.emit(EVENTS.CLIENT.NEW_WAITING, preferences);
+  const preferences = {
+    IS: selectOwnPref,
+    WANTS: selectPref,
+  };
+  useEffect(() => {
+    //this is part of the find logic. it is in useEffect because otherwise
+    //if it is in the find function, the event listeners end up getting
+    //doubled or something which sends to many emits to the server
 
     socket.on(EVENTS.SERVER.JOINED_WAITING_ROOM, (otherWaitingUsers) => {
-      setLoadingText(`Found ${otherWaitingUsers.length} online`);
+      console.log("sent a EVENTS.CLIENT.CONNECT_ME");
 
+      // setLoadingText(`Found ${otherWaitingUsers.length} online`);
       if (otherWaitingUsers.length <= 1) {
         //theres nobody else besides this user on the app
         //add retry and waiting logic
         setLoadingText("Searching for someone");
 
-        // const interval = setInterval(() => {
-        //   setLoadingText("Looking for someone");
-
         socket.on(EVENTS.SERVER.CONNECTEDWITHYOU, (roomkey) => {
           setLoadingText("Found someone!");
-
           setLoadingText("Joining room");
           setFinding(false);
           setLoading(false);
+          socket.off(EVENTS.SERVER.JOINED_WAITING_ROOM);
+
           //go to chat page
           router.push({
             pathname: "/chat",
           });
         });
-        // }, 5000);
-
-        // return () => clearInterval(interval);
       } else {
         setLoadingText("Found someone!");
+        console.log("sent a EVENTS.CLIENT.CONNECT_ME");
         socket.emit(EVENTS.CLIENT.CONNECT_ME, preferences);
         setLoadingText("Trying to connect with them");
+        socket.off(EVENTS.SERVER.JOINED_WAITING_ROOM);
 
         socket.on(EVENTS.SERVER.CONNECTED, (roomkey) => {
           setLoadingText("Joining room");
@@ -151,6 +151,13 @@ export default function Find() {
         });
       }
     });
+  }, [socket]);
+  function findSomeone() {
+    setFinding(true);
+    setLoading(true);
+    console.log("requesting to connect");
+
+    socket.emit(EVENTS.CLIENT.NEW_WAITING, preferences);
   }
 
   useEffect(() => {
@@ -299,7 +306,9 @@ export default function Find() {
                     bgGradient="linear(to-l, #F0F443, #FBD26A)"
                     _hover={{ bgGradient: "linear(to-l, #FBD26A, #F0F443)" }}
                     _active={{ bgGradient: "linear(to-l, #F0F443, #FBD26A)" }}
-                    onClick={findSomeone}
+                    onClick={() => {
+                      findSomeone();
+                    }}
                   >
                     SEARCH
                   </Button>
