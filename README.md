@@ -10,7 +10,7 @@
   <a href="https://github.com/8ahmedanwer8/repo_name">
     <img src="https://github.com/8ahmedanwer8/ceiconnect/assets/84689304/b91568d7-e8c6-4659-a2aa-c7b49e8ae3b3" alt="Logo">
   </a>
-  <img src ="ceiconnect.gif" width = 600></img>
+  <img src ="ceiconnect.gif" width = 600 alt="demo gif"></img>
 
 <h3 align="center">CeiConnect</h3>
 
