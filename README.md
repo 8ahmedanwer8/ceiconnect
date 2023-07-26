@@ -31,7 +31,7 @@ The motivation for this project came from when I unexpectedly made a friend on m
 * I used a Node in-memory cache (node-cache) to maintain a record on the server-side of active chat rooms
 * I implemented client-side geofencing so that only users from my university are using the app
 * I developed a simple user-matching algorithm with retries and priorities to connect users with matching preferences
-* I built everything with Sockets.io, Express.js, Next.js, Chakra-UI and TypeScript andd Figma
+* I built everything with Sockets.io, Express.js, Next.js, Chakra-UI and TypeScript and Figma
 * Working on deploying to AWS EC2 instance for live users to use and will promote the app hopefully soon
 
 <!-- RUNNING LOCALLY -->
