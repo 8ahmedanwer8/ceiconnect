@@ -33,9 +33,19 @@ The motivation for this project came from when I unexpectedly made a friend on m
 <!-- RUNNING LOCALLY -->
 ## Running Locally
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
+1. Clone the repo
+   ```sh
+   git clone https://github.com/8ahmedanwer8/ceiconnect.git
+   ```
+2. Install packages
+   ```sh
+   yarn install
+   ```
+3. Run app
+   ```js
+   yarn dev
+   ```
+   
 <!-- LICENSE -->
 ## License
 
@@ -47,8 +57,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@https://twitter.com/AhmedAn17381286](https://twitter.com/https://twitter.com/AhmedAn17381286) 
-
+[Twitter](https://twitter.com/https://twitter.com/AhmedAn17381286) 
+[LinkedIn](https://www.linkedin.com/in/8ahmed8/)
+****
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
