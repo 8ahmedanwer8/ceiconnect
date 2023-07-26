@@ -45,14 +45,6 @@ The motivation for this project came from when I unexpectedly made a friend on m
    ```js
    yarn dev
    ```
-   
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 <!-- CONTACT -->
 ## Contact
@@ -60,7 +52,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [Twitter](https://twitter.com/https://twitter.com/AhmedAn17381286) 
 [LinkedIn](https://www.linkedin.com/in/8ahmed8/)
 ****
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
