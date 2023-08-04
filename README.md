@@ -26,7 +26,7 @@
 The motivation for this project came from when I unexpectedly made a friend on my university campus. He was searching for a lecture hall and asked me for directions as I was walking by. There I realized that there are many friendships that go undiscovered simply because we are nervous to say "Hello" and break the ice with someone. CeiConnect attempts to solve this problem by providing an anonymous chat interface for students to enrich their social lives.
 
 
-### Features
+### Highlights
 
 * I used a Node in-memory cache (node-cache) to maintain a record on the server-side of active chat rooms
 * I implemented client-side geofencing so that only users from my university are using the app
