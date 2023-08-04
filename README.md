@@ -53,7 +53,8 @@ The motivation for this project came from when I unexpectedly made a friend on m
 <!-- CONTACT -->
 ## Contact
 
-[Twitter](https://twitter.com/https://twitter.com/AhmedAn17381286) 
+[Twitter](https://twitter.com/AhmedAn17381286)
+<br />
 [LinkedIn](https://www.linkedin.com/in/8ahmed8/)
 ****
 
